@@ -3,420 +3,433 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>СПО «ГРАФІТ» // Оператор C2 - Повітряна обізнаність (Київ)</title>
+    <title>СПО «ГРАФІТ» // Тактична повітряна обізнаність (Київ)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Leaflet CSS & JS -->
+    <!-- Leaflet CSS & JS (NO API KEY REQUIRED) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Armed Forces of Ukraine (ЗСУ) Inspired Typography & Styling -->
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Inter:wght@400;600;700&display=swap');
-        
+        @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
         :root {
-            --mil-bg: #090d10;
-            --mil-card: #0f161d;
-            --mil-border: #1e293b;
-            --mil-red: #ef4444;
-            --mil-amber: #f59e0b;
-            --mil-green: #10b981;
-            --mil-cyan: #06b6d4;
+            /* Brandbook ZSU Colors */
+            --zsu-green: #2B3D2E;         /* Захисний полиновий / хакі */
+            --zsu-green-dark: #1A261D;    /* Глибокий оливковий */
+            --zsu-crimson: #9B1B30;       /* Малиновий козацький */
+            --zsu-crimson-light: #BF2642; /* Сигнальний малиновий */
+            --zsu-gold: #E5A93C;          /* Тактичний золотий / жовтий */
+            --zsu-bg: #141A16;            /* Темний графітовий фон системи */
+            --zsu-card: #1D2620;          /* Колір бойових карток */
+            --zsu-border: #384A3C;        /* Колір бойових ліній/рамок */
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--mil-bg);
-            color: #e2e8f0;
+            background-color: var(--zsu-bg);
+            color: #E2E8F0;
             overflow: hidden;
             user-select: none;
             -webkit-user-select: none;
+        }
+
+        .font-zsu {
+            font-family: 'Oswald', sans-serif;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
         }
 
         .mono-font {
             font-family: 'JetBrains Mono', monospace;
         }
 
-        /* Tactical CRT scanline subtle overlay */
-        .scanlines {
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-            background-size: 100% 3px, 6px 100%;
-            pointer-events: none;
-        }
-
-        /* Leaflet Customizations for Tactical look */
+        /* 100% REAL OPENSTREETMAP - NO DARK INVERT FILTERS, FULL NATURAL VISIBILITY */
         .leaflet-container {
-            background-color: #070a0e !important;
+            background-color: #cbd5e1 !important;
             cursor: crosshair !important;
+            font-family: 'Inter', sans-serif;
         }
 
+        /* High-contrast tactical popups for bright real OSM */
         .leaflet-popup-content-wrapper, .leaflet-popup-tip {
-            background: #0f172a !important;
-            color: #f8fafc !important;
-            border: 1px solid #334155;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
-            border-radius: 8px !important;
+            background: #1A261D !important;
+            color: #F8FAFC !important;
+            border: 2px solid #9B1B30 !important;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7) !important;
+            border-radius: 6px !important;
         }
 
-        /* Threat pulsing beacon */
-        @keyframes radar-pulse {
-            0% { transform: scale(0.85); opacity: 0.9; }
-            50% { transform: scale(1.35); opacity: 0.3; }
-            100% { transform: scale(0.85); opacity: 0.9; }
-        }
-
-        .target-ping {
-            animation: radar-pulse 1.6s infinite ease-in-out;
-        }
-
-        /* Grid squares overlay */
+        /* Tactical Grid Labels over Real Map */
         .tactical-grid-label {
             font-family: 'JetBrains Mono', monospace;
             font-size: 11px;
-            font-weight: 700;
-            color: rgba(6, 182, 212, 0.65);
-            text-shadow: 0 0 4px rgba(0,0,0,0.9);
+            font-weight: 800;
+            color: #1A261D;
+            background: rgba(255, 255, 255, 0.85);
+            padding: 1px 5px;
+            border-radius: 3px;
+            border: 1px solid #2B3D2E;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
             pointer-events: none;
+            display: inline-block;
         }
 
-        /* Custom Scrollbars */
-        ::-webkit-scrollbar {
-            width: 4px;
-            height: 4px;
+        /* Tactical Beacon Pulse */
+        @keyframes zsu-pulse {
+            0% { transform: scale(0.9); opacity: 0.95; }
+            50% { transform: scale(1.4); opacity: 0.25; }
+            100% { transform: scale(0.9); opacity: 0.95; }
         }
-        ::-webkit-scrollbar-track {
-            background: #090d10;
+
+        .pulse-beacon {
+            animation: zsu-pulse 1.6s infinite ease-in-out;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #253342;
-            border-radius: 2px;
-        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #141A16; }
+        ::-webkit-scrollbar-thumb { background: #384A3C; border-radius: 2px; }
     </style>
 </head>
-<body class="w-screen h-screen flex flex-col bg-[#070b0e] text-slate-200">
-    <!-- TOP TACTICAL NAVIGATION BAR -->
-    <header class="h-14 border-b border-slate-800 bg-[#0d1319]/90 backdrop-blur px-4 flex items-center justify-between z-20 shrink-0">
+<body class="w-screen h-screen flex flex-col bg-[#141A16] text-slate-100">
+
+    <!-- TOP MILITARY HEADER (СТАНДАРТ ЗСУ) -->
+    <header class="h-14 border-b border-[#384A3C] bg-[#1A261D] px-4 flex items-center justify-between z-30 shrink-0 shadow-md">
+        <!-- Unit and System Crest -->
         <div class="flex items-center space-x-3">
-            <div class="flex items-center space-x-2">
-                <span class="relative flex h-3 w-3">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                </span>
-                <span class="font-extrabold tracking-wider text-base text-slate-100 flex items-center gap-1.5 mono-font">
-                    <i data-lucide="shield-alert" class="w-5 h-5 text-cyan-400"></i>
-                    ГРАФІТ <span class="text-xs px-1.5 py-0.5 rounded bg-cyan-950/80 text-cyan-400 border border-cyan-800">C2 KYIV SECTOR</span>
-                </span>
+            <div class="flex items-center gap-2">
+                <!-- AFU Cross Symbol Shape -->
+                <div class="w-8 h-8 rounded bg-[#9B1B30] border border-[#E5A93C] flex items-center justify-center shadow">
+                    <span class="text-[#E5A93C] font-bold text-xs font-zsu">ЗСУ</span>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-zsu font-bold text-base tracking-wider text-white">СПО «ГРАФІТ»</span>
+                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-[#2B3D2E] text-[#E5A93C] border border-[#384A3C] font-semibold mono-font">C2 КИЇВ</span>
+                    </div>
+                    <div class="text-[10px] text-slate-300 mono-font hidden sm:block">
+                        СИСТЕМА ПОВІТРЯНОЇ ОБІЗНАНОСТІ ТА ЦІЛЕВКАЗАННЯ
+                    </div>
+                </div>
             </div>
-            <div class="hidden md:flex items-center gap-2 text-xs mono-font border-l border-slate-700/60 pl-3 text-slate-400">
-                <span class="text-slate-500">СЕКТОР:</span>
-                <span class="text-amber-400 font-semibold">КИЇВ (ОБМЕЖЕНО)</span>
-                <span class="text-slate-600">|</span>
-                <span class="text-slate-500">ОПЕРАТИВНИЙ РЕЖИМ:</span>
-                <span class="text-emerald-400">БОЙОВИЙ ЧЕРГОВИЙ</span>
+            
+            <div class="hidden lg:flex items-center gap-2 text-xs mono-font border-l border-[#384A3C] pl-3 text-slate-300">
+                <span class="text-slate-400">СЕКТОР:</span>
+                <span class="text-[#E5A93C] font-bold">КИЇВСЬКИЙ РУБІЖ</span>
+                <span class="text-[#384A3C]">|</span>
+                <span class="text-slate-400">КАРТА:</span>
+                <span class="text-emerald-400 font-bold">РЕАЛЬНА OPENSTREETMAP</span>
             </div>
         </div>
 
-        <!-- Quick Grid Search Box & Stats -->
-        <div class="flex items-center space-x-3">
-            <div class="relative flex items-center">
-                <i data-lucide="crosshair" class="w-4 h-4 text-cyan-500 absolute left-2.5 pointer-events-none"></i>
-                <input id="gridSearchInput" type="text" placeholder="Швидкий квадрат (напр. 42)" 
-                    class="bg-slate-900/90 border border-slate-700/80 rounded px-2.5 pl-8 py-1 text-xs mono-font text-cyan-300 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 w-36 sm:w-56 transition-all"
-                    onkeydown="if(event.key === 'Enter') handleSearchSquare()" />
-                <button onclick="handleSearchSquare()" class="ml-1 px-2.5 py-1 text-xs bg-cyan-900/40 hover:bg-cyan-800/60 border border-cyan-700/70 text-cyan-300 rounded font-semibold transition">
-                    Знайти
+        <!-- Real Map Mode Toggle & Tactical Search -->
+        <div class="flex items-center space-x-2 sm:space-x-3">
+            <!-- Map Switcher (100% Real OpenStreetMap vs Real Satellite) -->
+            <div class="flex items-center bg-[#141A16] border border-[#384A3C] rounded p-0.5 text-xs font-zsu">
+                <button id="btnOsmReal" onclick="switchMapLayer('osm')" class="px-2.5 py-1 rounded bg-[#2B3D2E] text-white font-bold border border-[#E5A93C]/40 shadow transition">
+                    ОПЕНСТРІТ (РЕАЛЬНА)
+                </button>
+                <button id="btnSatReal" onclick="switchMapLayer('sat')" class="px-2.5 py-1 rounded text-slate-300 hover:text-white transition">
+                    СУПУТНИК
                 </button>
             </div>
 
-            <div class="flex items-center space-x-2 border-l border-slate-700/60 pl-3">
-                <div class="text-right hidden sm:block">
-                    <div id="liveClock" class="text-xs font-bold text-slate-200 mono-font">12:00:00 UTC+3</div>
-                    <div class="text-[10px] text-emerald-400 mono-font flex items-center justify-end gap-1">
-                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span> РАЦІЯ: АКТИВНА
-                    </div>
-                </div>
-                <button onclick="toggleAudioMute()" id="audioToggleBtn" title="Звукові сирени/сповіщення" class="p-2 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition">
-                    <i id="audioIcon" data-lucide="volume-2" class="w-4 h-4 text-cyan-400"></i>
+            <!-- Square Quick Search -->
+            <div class="relative flex items-center">
+                <i data-lucide="crosshair" class="w-3.5 h-3.5 text-[#E5A93C] absolute left-2.5 pointer-events-none"></i>
+                <input id="gridSearchInput" type="text" placeholder="Квадрат (напр. 42)" 
+                    class="bg-[#141A16] border border-[#384A3C] rounded px-2 pl-7 py-1 text-xs mono-font text-white placeholder-slate-400 focus:outline-none focus:border-[#E5A93C] w-28 sm:w-44 transition-all"
+                    onkeydown="if(event.key === 'Enter') handleSearchSquare()" />
+                <button onclick="handleSearchSquare()" class="ml-1 px-2.5 py-1 text-xs bg-[#2B3D2E] hover:bg-[#384A3C] border border-[#384A3C] text-slate-200 rounded font-zsu font-bold">
+                    ПОШУК
                 </button>
             </div>
+
+            <!-- Sound Alarm Switch -->
+            <button onclick="toggleAudioMute()" id="audioToggleBtn" title="Звукове сповіщення" class="p-2 rounded bg-[#141A16] hover:bg-[#2B3D2E] border border-[#384A3C] text-slate-200 transition">
+                <i id="audioIcon" data-lucide="volume-2" class="w-4 h-4 text-[#E5A93C]"></i>
+            </button>
         </div>
     </header>
 
-    <!-- MAIN INTERACTIVE WORKSPACE -->
     <div class="flex-1 flex relative overflow-hidden">
-        <!-- Tactical Leaflet Map Canvas (Locked to Kyiv) -->
+        <!-- Interactive Leaflet Canvas -->
         <div id="map" class="flex-1 w-full h-full z-0"></div>
 
-        <!-- Scanlines effect for military display -->
-        <div class="scanlines absolute inset-0 pointer-events-none z-10"></div>
-
-        <!-- Map Floating Controls & Instructions -->
+        <!-- Quick Operation Instructions HUD (Floating Top-Left) -->
         <div class="absolute top-3 left-3 z-10 flex flex-col gap-2 pointer-events-auto">
-            <div class="bg-slate-900/85 backdrop-blur border border-slate-700/80 p-2.5 rounded-lg shadow-xl text-xs max-w-xs">
-                <div class="flex items-center justify-between font-semibold text-slate-200 border-b border-slate-800 pb-1.5 mb-1.5">
-                    <span class="flex items-center gap-1.5 text-cyan-400">
-                        <i data-lucide="radio-tower" class="w-4 h-4"></i> ІНСТРУКЦІЯ ШВИДКОГО ПУСКУ
+            <div class="bg-[#1A261D]/95 backdrop-blur-md border border-[#384A3C] p-3 rounded shadow-2xl text-xs max-w-xs text-slate-100">
+                <div class="flex items-center justify-between font-zsu text-sm text-[#E5A93C] border-b border-[#384A3C] pb-1.5 mb-1.5 font-bold">
+                    <span class="flex items-center gap-1.5">
+                        <i data-lucide="radio" class="w-4 h-4"></i> БОЙОВИЙ АЛГОРИТМ ОПЕРАТОРА
                     </span>
-                    <span class="text-[10px] px-1 bg-amber-500/20 text-amber-300 rounded border border-amber-500/30">ЕКСТРЕНЕ</span>
+                    <span class="text-[10px] px-1 bg-[#9B1B30] text-white rounded font-mono font-bold">СПО 2.0</span>
                 </div>
-                <ul class="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
-                    <li><strong class="text-cyan-300">Правий клік / Довгий тап:</strong> виставити мітку інтересу.</li>
-                    <li><strong class="text-cyan-300">2-3 кліки:</strong> оберіть тип, курс і тисніть «ПІДТВЕРДИТИ».</li>
-                    <li><strong class="text-cyan-300">Супровід:</strong> перетягуйте червоний маркер для оновлення треку.</li>
-                </ul>
-                <div class="mt-2 pt-1.5 border-t border-slate-800/80 flex justify-between items-center text-[10px] text-slate-400 mono-font">
-                    <span>КАРТА: <span class="text-emerald-400">ФІКСОВАНА (КИЇВ)</span></span>
-                    <button onclick="centerKyiv()" class="text-cyan-400 hover:underline">Центрувати</button>
+                <div class="space-y-1.5 text-[11px] leading-tight text-slate-200">
+                    <p><strong class="text-[#E5A93C]">1. Клік / Тап:</strong> Правий клік (або довгий тап) ставить точку виявлення цілі.</p>
+                    <p><strong class="text-[#E5A93C]">2. Картка (2-3 кліки):</strong> Оберіть тип (Mavic/FPV), курс і тисніть <strong>«ПУСК»</strong>.</p>
+                    <p><strong class="text-[#E5A93C]">3. Супровід:</strong> Перетягуйте маркер (Drag-and-Drop) згідно з доповідями по рації.</p>
+                </div>
+                <div class="mt-2 pt-1.5 border-t border-[#384A3C] flex justify-between items-center text-[10px] mono-font text-slate-300">
+                    <span>КАРТА: <strong class="text-emerald-400">КИЇВ (ФІКСОВАНА)</strong></span>
+                    <button onclick="centerKyiv()" class="text-[#E5A93C] hover:underline font-bold">ЦЕНТРУВАТИ</button>
                 </div>
             </div>
 
-            <!-- Quick Add Button for touch devices if right click is cumbersome -->
-            <button onclick="toggleQuickPlotMode()" id="plotModeBtn" class="flex items-center justify-center gap-2 bg-slate-800/90 hover:bg-slate-700 border border-slate-600 px-3 py-2 rounded shadow-md text-xs font-semibold text-slate-200 transition">
-                <i data-lucide="crosshair" class="w-4 h-4 text-amber-400"></i>
-                <span id="plotModeText">Режим нанесення: Звичайний</span>
+            <!-- Touch Single Click Plotting Button -->
+            <button onclick="toggleQuickPlotMode()" id="plotModeBtn" class="flex items-center justify-center gap-2 bg-[#2B3D2E] hover:bg-[#384A3C] border border-[#384A3C] px-3 py-2 rounded shadow-md text-xs font-zsu font-bold text-white transition">
+                <i data-lucide="target" class="w-4 h-4 text-[#E5A93C]"></i>
+                <span id="plotModeText">РЕЖИМ НАНЕСЕННЯ: ЗВИЧАЙНИЙ</span>
             </button>
         </div>
 
-        <!-- Simulated Friendly Position Beacon (Опорний пункт "Квадрат 42 / Липки") -->
+        <!-- Friendly Unit Beacon (Печерськ / Липки - ОП "Дніпро-1") -->
         <div class="absolute bottom-3 left-3 z-10 pointer-events-auto">
-            <div class="bg-slate-900/90 backdrop-blur border border-emerald-600/40 rounded-lg p-2.5 shadow-xl text-xs flex items-center gap-3">
-                <div class="p-2 bg-emerald-950/60 border border-emerald-500/50 rounded-full">
-                    <i data-lucide="radio" class="w-4 h-4 text-emerald-400"></i>
+            <div class="bg-[#1A261D]/95 backdrop-blur-md border border-emerald-600/60 rounded p-2.5 shadow-2xl text-xs flex items-center gap-3">
+                <div class="p-2 bg-emerald-950/80 border border-emerald-500 rounded-full">
+                    <i data-lucide="shield" class="w-4 h-4 text-emerald-400"></i>
                 </div>
                 <div>
-                    <div class="font-bold text-slate-100 flex items-center gap-2">
-                        Опорний Пункт «Дніпро-1» <span class="text-[10px] px-1 bg-emerald-500/20 text-emerald-300 rounded border border-emerald-500/40">НАШІ</span>
+                    <div class="font-zsu font-bold text-sm text-white flex items-center gap-1.5">
+                        ОП «ДНІПРО-1» <span class="text-[9px] px-1 bg-emerald-700 text-white rounded font-mono font-bold">СВОЇ</span>
                     </div>
-                    <div class="text-[11px] text-slate-400 mono-font">
-                        Координати зв'язку: Квадрат 45 (Печерськ)
+                    <div class="text-[11px] text-slate-300 mono-font">
+                        Сектор прикриття: Квадрат 45 (Печерськ)
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- RAPID TARGET ENTRY MODAL / CONTEXT HUD (2-3 CLICKS) -->
-        <div id="rapidCardModal" class="hidden absolute top-16 right-4 sm:right-6 z-30 w-80 sm:w-96 bg-[#0e1722]/95 backdrop-blur-md border-2 border-red-500/70 rounded-xl shadow-2xl p-4 transition-all">
+        <!-- RAPID TARGET ENTRY MODAL (2-3 КЛІКИ) -->
+        <div id="rapidCardModal" class="hidden absolute top-16 right-4 sm:right-6 z-40 w-80 sm:w-96 bg-[#1A261D] border-2 border-[#9B1B30] rounded shadow-2xl p-4 transition-all">
             <!-- Modal Header -->
-            <div class="flex items-center justify-between border-b border-slate-700/80 pb-2 mb-3">
+            <div class="flex items-center justify-between border-b border-[#384A3C] pb-2 mb-3">
                 <div class="flex items-center gap-2">
-                    <div class="h-2.5 w-2.5 rounded-full bg-red-500 animate-ping"></div>
-                    <span class="text-xs font-bold text-red-400 uppercase tracking-wider mono-font">ШВИДКА КАРТКА ЦІЛІ</span>
-                </div>
-                <div class="text-xs mono-font text-slate-400" id="modalTargetCoords">
-                    КВ-?? [50.450, 30.523]
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#9B1B30] animate-ping"></span>
+                    <span class="font-zsu font-bold text-sm text-red-400 tracking-wider">ШВИДКА КАРТКА ЦІЛІ (ВІЗУАЛЬНИЙ ПОСТ)</span>
                 </div>
                 <button onclick="closeTargetModal()" class="text-slate-400 hover:text-white p-1">
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
 
+            <div class="text-xs mono-font text-[#E5A93C] mb-3 flex items-center justify-between bg-[#141A16] px-2.5 py-1.5 rounded border border-[#384A3C]">
+                <span id="modalTargetSquare">КВАДРАТ 42</span>
+                <span id="modalTargetCoords" class="text-slate-400">[50.450, 30.523]</span>
+            </div>
+
             <form id="targetForm" onsubmit="event.preventDefault(); confirmThreatLaunch();" class="space-y-3.5">
-                <!-- 1. Threat Type Presets -->
+                <!-- 1. Threat Type Preset Buttons -->
                 <div>
-                    <label class="block text-[11px] font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
-                        <span>1. ТИП ЗАГРОЗИ (ОБЕРІТЬ В ОДИН КЛІК)</span>
-                        <span class="text-[10px] text-red-400 mono-font">ОБОВ'ЯЗКОВО</span>
+                    <label class="block text-[11px] font-zsu font-bold text-slate-300 mb-1.5 flex items-center justify-between">
+                        <span>1. ТИП ЦІЛІ (ОБЕРІТЬ В 1 КЛІК)</span>
+                        <span class="text-[10px] text-[#E5A93C] mono-font">ШВИДКИЙ ПРЕСЕТ</span>
                     </label>
                     <div class="grid grid-cols-2 gap-1.5" id="threatTypeGroup">
-                        <button type="button" onclick="selectThreatType('mavic')" data-type="mavic" class="threat-btn active flex items-center gap-2 p-2 rounded-lg border text-left transition bg-red-950/40 border-red-500/80 text-white">
-                            <i data-lucide="disc" class="w-4 h-4 text-amber-400 shrink-0"></i>
+                        <button type="button" onclick="selectThreatType('mavic')" data-type="mavic" class="threat-btn active flex items-center gap-2 p-2 rounded border text-left transition bg-[#9B1B30]/30 border-[#9B1B30] text-white">
+                            <i data-lucide="disc" class="w-4 h-4 text-[#E5A93C] shrink-0"></i>
                             <div>
-                                <div class="text-xs font-bold leading-none">Mavic / Дрон</div>
-                                <span class="text-[9px] text-slate-400">Скид / Наведення</span>
+                                <div class="text-xs font-bold leading-none font-zsu">Mavic / Дрон</div>
+                                <span class="text-[9px] text-slate-300">Скиди / Коригування</span>
                             </div>
                         </button>
-                        <button type="button" onclick="selectThreatType('fpv')" data-type="fpv" class="threat-btn flex items-center gap-2 p-2 rounded-lg border border-slate-700 bg-slate-800/70 text-slate-300 hover:border-slate-500 text-left transition">
+                        <button type="button" onclick="selectThreatType('fpv')" data-type="fpv" class="threat-btn flex items-center gap-2 p-2 rounded border border-[#384A3C] bg-[#141A16] text-slate-300 hover:border-slate-400 text-left transition">
                             <i data-lucide="zap" class="w-4 h-4 text-red-400 shrink-0"></i>
                             <div>
-                                <div class="text-xs font-bold leading-none">FPV-Камікадзе</div>
+                                <div class="text-xs font-bold leading-none font-zsu">FPV-Камікадзе</div>
                                 <span class="text-[9px] text-slate-400">Швидкісна атака</span>
                             </div>
                         </button>
-                        <button type="button" onclick="selectThreatType('recon')" data-type="recon" class="threat-btn flex items-center gap-2 p-2 rounded-lg border border-slate-700 bg-slate-800/70 text-slate-300 hover:border-slate-500 text-left transition">
+                        <button type="button" onclick="selectThreatType('recon')" data-type="recon" class="threat-btn flex items-center gap-2 p-2 rounded border border-[#384A3C] bg-[#141A16] text-slate-300 hover:border-slate-400 text-left transition">
                             <i data-lucide="eye" class="w-4 h-4 text-cyan-400 shrink-0"></i>
                             <div>
-                                <div class="text-xs font-bold leading-none">Розвідник</div>
+                                <div class="text-xs font-bold leading-none font-zsu">Крило-Розвідник</div>
                                 <span class="text-[9px] text-slate-400">Орлан / Zala / Supercam</span>
                             </div>
                         </button>
-                        <button type="button" onclick="selectThreatType('missile')" data-type="missile" class="threat-btn flex items-center gap-2 p-2 rounded-lg border border-slate-700 bg-slate-800/70 text-slate-300 hover:border-slate-500 text-left transition">
+                        <button type="button" onclick="selectThreatType('missile')" data-type="missile" class="threat-btn flex items-center gap-2 p-2 rounded border border-[#384A3C] bg-[#141A16] text-slate-300 hover:border-slate-400 text-left transition">
                             <i data-lucide="flame" class="w-4 h-4 text-rose-500 shrink-0"></i>
                             <div>
-                                <div class="text-xs font-bold leading-none">КАБ / Shahed</div>
-                                <span class="text-[9px] text-slate-400">Крилата ціль</span>
+                                <div class="text-xs font-bold leading-none font-zsu">КАБ / Shahed</div>
+                                <span class="text-[9px] text-slate-400">Високоточний удар</span>
                             </div>
                         </button>
                     </div>
                 </div>
 
-                <!-- 2. Course & Direction (8-point Tactical Dial) -->
+                <!-- 2. Course / Direction 8-point Selector -->
                 <div>
-                    <label class="block text-[11px] font-semibold text-slate-300 mb-1 flex items-center justify-between">
-                        <span>2. КУРС / НАПРЯМОК РУХУ</span>
-                        <span id="headingLabel" class="text-xs mono-font font-bold text-amber-400">ЗАХІД (270°)</span>
+                    <label class="block text-[11px] font-zsu font-bold text-slate-300 mb-1 flex items-center justify-between">
+                        <span>2. КУРС РУХУ ОБ'ЄКТА</span>
+                        <span id="headingLabel" class="text-xs mono-font font-bold text-[#E5A93C]">ЗАХІД (270°)</span>
                     </label>
                     <div class="grid grid-cols-4 gap-1">
-                        <button type="button" onclick="setHeading(0, 'ПІВНІЧ')" data-heading="0" class="heading-btn py-1 px-1.5 text-[11px] font-bold rounded bg-slate-800 border border-slate-700 hover:bg-slate-700 mono-font">Пн (0°)</button>
-                        <button type="button" onclick="setHeading(45, 'ПН-СХІД')" data-heading="45" class="heading-btn py-1 px-1.5 text-[11px] font-bold rounded bg-slate-800 border border-slate-700 hover:bg-slate-700 mono-font">Пн-Сх</button>
-                        <button type="button" onclick="setHeading(90, 'СХІД')" data-heading="90" class="heading-btn py-1 px-1.5 text-[11px] font-bold rounded bg-slate-800 border border-slate-700 hover:bg-slate-700 mono-font">Сх (90°)</button>
-                        <button type="button" onclick="setHeading(135, 'ПД-СХІД')" data-heading="135" class="heading-btn py-1 px-1.5 text-[11px] font-bold rounded bg-slate-800 border border-slate-700 hover:bg-slate-700 mono-font">Пд-Сх</button>
-                        <button type="button" onclick="setHeading(180, 'ПІВДЕНЬ')" data-heading="180" class="heading-btn py-1 px-1.5 text-[11px] font-bold rounded bg-slate-800 border border-slate-700 hover:bg-slate-700 mono-font">Пд (180°)</button>
-                        <button type="button" onclick="setHeading(225, 'ПД-ЗАХІД')" data-heading="225" class="heading-btn py-1 px-1.5 text-[11px] font-bold rounded bg-slate-800 border border-slate-700 hover:bg-slate-700 mono-font">Пд-Зх</button>
-                        <button type="button" onclick="setHeading(270, 'ЗАХІД')" data-heading="270" class="heading-btn active py-1 px-1.5 text-[11px] font-bold rounded bg-amber-600/30 text-amber-300 border border-amber-500/80 mono-font">Зх (270°)</button>
-                        <button type="button" onclick="setHeading(315, 'ПН-ЗАХІД')" data-heading="315" class="heading-btn py-1 px-1.5 text-[11px] font-bold rounded bg-slate-800 border border-slate-700 hover:bg-slate-700 mono-font">Пн-Зх</button>
+                        <button type="button" onclick="setHeading(0, 'ПІВНІЧ')" data-heading="0" class="heading-btn py-1 px-1 text-[11px] font-bold rounded bg-[#141A16] border border-[#384A3C] hover:bg-[#2B3D2E] mono-font">Пн (0°)</button>
+                        <button type="button" onclick="setHeading(45, 'ПН-СХІД')" data-heading="45" class="heading-btn py-1 px-1 text-[11px] font-bold rounded bg-[#141A16] border border-[#384A3C] hover:bg-[#2B3D2E] mono-font">Пн-Сх</button>
+                        <button type="button" onclick="setHeading(90, 'СХІД')" data-heading="90" class="heading-btn py-1 px-1 text-[11px] font-bold rounded bg-[#141A16] border border-[#384A3C] hover:bg-[#2B3D2E] mono-font">Сх (90°)</button>
+                        <button type="button" onclick="setHeading(135, 'ПД-СХІД')" data-heading="135" class="heading-btn py-1 px-1 text-[11px] font-bold rounded bg-[#141A16] border border-[#384A3C] hover:bg-[#2B3D2E] mono-font">Пд-Сх</button>
+                        <button type="button" onclick="setHeading(180, 'ПІВДЕНЬ')" data-heading="180" class="heading-btn py-1 px-1 text-[11px] font-bold rounded bg-[#141A16] border border-[#384A3C] hover:bg-[#2B3D2E] mono-font">Пд (180°)</button>
+                        <button type="button" onclick="setHeading(225, 'ПД-ЗАХІД')" data-heading="225" class="heading-btn py-1 px-1 text-[11px] font-bold rounded bg-[#141A16] border border-[#384A3C] hover:bg-[#2B3D2E] mono-font">Пд-Зх</button>
+                        <button type="button" onclick="setHeading(270, 'ЗАХІД')" data-heading="270" class="heading-btn active py-1 px-1 text-[11px] font-bold rounded bg-[#E5A93C]/20 text-[#E5A93C] border border-[#E5A93C] mono-font">Зх (270°)</button>
+                        <button type="button" onclick="setHeading(315, 'ПН-ЗАХІД')" data-heading="315" class="heading-btn py-1 px-1 text-[11px] font-bold rounded bg-[#141A16] border border-[#384A3C] hover:bg-[#2B3D2E] mono-font">Пн-Зх</button>
                     </div>
                 </div>
 
-                <!-- 3. Altitude & Quantity selectors -->
+                <!-- 3. Altitude & Quantity -->
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-[10px] font-semibold text-slate-400 mb-1">ВИСОТА (ЕШЕЛОН)</label>
+                        <label class="block text-[10px] font-zsu font-bold text-slate-300 mb-1">ВИСОТА (ЕШЕЛОН)</label>
                         <div class="flex gap-1">
-                            <button type="button" onclick="setAltitude('Низька (<100м)')" data-alt="low" class="alt-btn active flex-1 py-1 text-[10px] font-semibold rounded bg-cyan-950/60 border border-cyan-500 text-cyan-300">
+                            <button type="button" onclick="setAltitude('Низька (<100м)')" data-alt="low" class="alt-btn active flex-1 py-1 text-[10px] font-semibold rounded bg-[#2B3D2E] border border-[#E5A93C] text-white">
                                 &lt;100м
                             </button>
-                            <button type="button" onclick="setAltitude('Середня (100-500м)')" data-alt="mid" class="alt-btn flex-1 py-1 text-[10px] font-semibold rounded bg-slate-800 border border-slate-700 text-slate-300">
+                            <button type="button" onclick="setAltitude('Середня (~300м)')" data-alt="mid" class="alt-btn flex-1 py-1 text-[10px] font-semibold rounded bg-[#141A16] border border-[#384A3C] text-slate-300">
                                 ~300м
                             </button>
-                            <button type="button" onclick="setAltitude('Велика (>1000м)')" data-alt="high" class="alt-btn flex-1 py-1 text-[10px] font-semibold rounded bg-slate-800 border border-slate-700 text-slate-300">
+                            <button type="button" onclick="setAltitude('Велика (>1км)')" data-alt="high" class="alt-btn flex-1 py-1 text-[10px] font-semibold rounded bg-[#141A16] border border-[#384A3C] text-slate-300">
                                 &gt;1км
                             </button>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-semibold text-slate-400 mb-1">КІЛЬКІСТЬ ОБ'ЄКТІВ</label>
+                        <label class="block text-[10px] font-zsu font-bold text-slate-300 mb-1">КІЛЬКІСТЬ ЦІЛЕЙ</label>
                         <div class="flex gap-1">
-                            <button type="button" onclick="setQuantity(1)" data-qty="1" class="qty-btn active flex-1 py-1 text-[11px] font-bold rounded bg-cyan-950/60 border border-cyan-500 text-cyan-300 mono-font">1</button>
-                            <button type="button" onclick="setQuantity(2)" data-qty="2" class="qty-btn flex-1 py-1 text-[11px] font-bold rounded bg-slate-800 border border-slate-700 text-slate-300 mono-font">2</button>
-                            <button type="button" onclick="setQuantity(3)" data-qty="3" class="qty-btn flex-1 py-1 text-[11px] font-bold rounded bg-slate-800 border border-slate-700 text-slate-300 mono-font">3</button>
-                            <button type="button" onclick="setQuantity('4+')" data-qty="4+" class="qty-btn flex-1 py-1 text-[11px] font-bold rounded bg-slate-800 border border-slate-700 text-slate-300 mono-font">4+</button>
+                            <button type="button" onclick="setQuantity(1)" data-qty="1" class="qty-btn active flex-1 py-1 text-[11px] font-bold rounded bg-[#2B3D2E] border border-[#E5A93C] text-white mono-font">1</button>
+                            <button type="button" onclick="setQuantity(2)" data-qty="2" class="qty-btn flex-1 py-1 text-[11px] font-bold rounded bg-[#141A16] border border-[#384A3C] text-slate-300 mono-font">2</button>
+                            <button type="button" onclick="setQuantity(3)" data-qty="3" class="qty-btn flex-1 py-1 text-[11px] font-bold rounded bg-[#141A16] border border-[#384A3C] text-slate-300 mono-font">3</button>
+                            <button type="button" onclick="setQuantity('4+')" data-qty="4+" class="qty-btn flex-1 py-1 text-[11px] font-bold rounded bg-[#141A16] border border-[#384A3C] text-slate-300 mono-font">4+</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- 4. Action Button ("Підтвердити" / "Пуск") -->
+                <!-- 4. Launch Action Confirmation -->
                 <div class="pt-2 flex gap-2">
-                    <button type="button" onclick="closeTargetModal()" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-semibold">
-                        Відхилити
+                    <button type="button" onclick="closeTargetModal()" class="px-3 py-2 rounded bg-[#141A16] hover:bg-[#2B3D2E] border border-[#384A3C] text-slate-300 text-xs font-zsu font-bold">
+                        ВІДХИЛИТИ
                     </button>
-                    <button type="submit" class="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold text-sm shadow-lg shadow-red-700/50 uppercase tracking-wider transition active:scale-95">
+                    <button type="submit" class="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded bg-[#9B1B30] hover:bg-[#BF2642] text-white font-zsu font-bold text-sm tracking-wide shadow-lg border border-[#E5A93C]/40 transition active:scale-95">
                         <i data-lucide="radio-tower" class="w-4 h-4"></i>
-                        Підтвердити (Пуск в мережу)
+                        ПІДТВЕРДИТИ (ПУСК В МЕРЕЖУ)
                     </button>
                 </div>
             </form>
         </div>
 
-        <!-- RIGHT DOCK: LIVE TARGETS LIST & TACTICAL TABLET 'ГРАФІТ ЛАЙТ' PREVIEW -->
-        <div id="sideDrawer" class="w-80 sm:w-96 bg-[#0c1218]/95 border-l border-slate-800 z-20 flex flex-col h-full shrink-0">
-            <!-- Tab Switcher -->
-            <div class="flex border-b border-slate-800 text-xs mono-font font-bold">
-                <button onclick="switchTab('targets')" id="tabTargetsBtn" class="flex-1 py-3 text-cyan-400 border-b-2 border-cyan-400 bg-slate-900/40 flex items-center justify-center gap-1.5">
-                    <i data-lucide="crosshair" class="w-3.5 h-3.5"></i>
+        <!-- RIGHT DOCK: ACTIVE C2 TARGETS & TACTICAL "ГРАФІТ ЛАЙТ" MOBILE PREVIEW -->
+        <div id="sideDrawer" class="w-80 sm:w-96 bg-[#1A261D] border-l border-[#384A3C] z-20 flex flex-col h-full shrink-0">
+            <!-- Tabs -->
+            <div class="flex border-b border-[#384A3C] text-xs font-zsu font-bold">
+                <button onclick="switchTab('targets')" id="tabTargetsBtn" class="flex-1 py-3 text-[#E5A93C] border-b-2 border-[#E5A93C] bg-[#141A16]/50 flex items-center justify-center gap-1.5">
+                    <i data-lucide="crosshair" class="w-4 h-4"></i>
                     ЦІЛІ В ПОВІТРІ (<span id="targetCountBadge">0</span>)
                 </button>
                 <button onclick="switchTab('light')" id="tabLightBtn" class="flex-1 py-3 text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center justify-center gap-1.5">
-                    <i data-lucide="smartphone" class="w-3.5 h-3.5 text-amber-400"></i>
-                    ГРАФІТ-ЛАЙТ (ОКОП)
+                    <i data-lucide="smartphone" class="w-4 h-4 text-emerald-400"></i>
+                    ГРАФІТ ЛАЙТ (ОКОП)
                 </button>
             </div>
 
-            <!-- TAB 1: Active Targets List -->
-            <div id="tabTargetsContent" class="flex-1 overflow-y-auto p-3 space-y-2">
-                <div class="text-[11px] text-slate-400 flex items-center justify-between pb-1 border-b border-slate-800 mono-font">
+            <!-- TAB 1: Real-time Manual Target Track List -->
+            <div id="tabTargetsContent" class="flex-1 overflow-y-auto p-3 space-y-2.5">
+                <div class="text-[11px] text-slate-300 flex items-center justify-between pb-1 border-b border-[#384A3C] mono-font">
                     <span>СУПРОВІД ЦІЛЕЙ (MANUAL C2)</span>
-                    <span class="text-emerald-400">DEAD-RECKONING ON</span>
+                    <span class="text-emerald-400 font-bold">DEAD-RECKONING ON</span>
                 </div>
 
-                <div id="emptyTargetNotice" class="text-center py-8 text-slate-500 text-xs">
-                    <i data-lucide="radar" class="w-8 h-8 mx-auto mb-2 text-slate-600 animate-pulse"></i>
-                    Повітряний простір чистий.<br>Для нанесення клікніть правою кнопкою або скористайтесь пошуком квадрата.
+                <div id="emptyTargetNotice" class="text-center py-10 text-slate-400 text-xs">
+                    <i data-lucide="radar" class="w-8 h-8 mx-auto mb-2 text-[#384A3C] animate-pulse"></i>
+                    Повітряний простір столиці чистий.<br>Для нанесення цілі зробіть клік правою кнопкою на карті або скористайтесь пошуком квадрата.
                 </div>
 
-                <!-- Target cards will be dynamically appended here -->
+                <!-- Dynamic Target Cards Container -->
                 <div id="targetsContainer" class="space-y-2"></div>
             </div>
 
-            <!-- TAB 2: 'Графіт Лайт' Tactical Tablet Simulation -->
-            <div id="tabLightContent" class="hidden flex-1 overflow-y-auto p-3 flex flex-col justify-between bg-[#080d12]">
+            <!-- TAB 2: Graphite Light Soldier Mobile Terminal Simulation -->
+            <div id="tabLightContent" class="hidden flex-1 overflow-y-auto p-3 flex flex-col justify-between bg-[#141A16]">
                 <div>
-                    <!-- Tablet Screen Frame -->
-                    <div class="border-2 border-slate-700 bg-black rounded-xl p-3 shadow-inner">
+                    <!-- Simulated Smartphone Screen -->
+                    <div class="border-2 border-[#384A3C] bg-black rounded-lg p-3 shadow-inner">
                         <div class="flex items-center justify-between border-b border-slate-800 pb-1.5 mb-2">
                             <div class="flex items-center gap-1.5">
-                                <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-                                <span class="text-[10px] font-bold tracking-widest text-emerald-400 mono-font">ТЕРМІНАЛ «ГРАФІТ ЛАЙТ»</span>
+                                <span class="h-2 w-2 rounded-full bg-emerald-500 animate-ping"></span>
+                                <span class="text-[10px] font-bold text-emerald-400 font-zsu tracking-wider">ГРАФІТ-ЛАЙТ // ОКОПНИЙ ТЕРМІНАЛ</span>
                             </div>
-                            <span class="text-[10px] mono-font text-slate-400">АКУМУЛЯТОР: 94%</span>
+                            <span class="text-[9px] mono-font text-slate-400">БАТАРЕЯ 88%</span>
                         </div>
 
-                        <div class="text-xs text-slate-300 mb-2">
-                            <span class="text-slate-500 font-semibold text-[10px]">ВАША ПОЗИЦІЯ:</span><br>
-                            <span class="mono-font text-emerald-300 font-bold">ОП «Дніпро-1» (Квадрат 45, Печерськ)</span>
+                        <div class="text-xs text-slate-200 mb-2">
+                            <span class="text-slate-400 text-[10px] font-zsu">ВАШ РУБІЖ / ПОЗИЦІЯ:</span><br>
+                            <span class="mono-font text-[#E5A93C] font-bold">ОП «Дніпро-1» (Печерськ, КВ-45)</span>
                         </div>
 
-                        <!-- Live Incoming Push Notifications Feed -->
+                        <!-- Push Notifications Feed for Trench Fighters -->
                         <div id="tabletPushContainer" class="space-y-2">
-                            <div class="p-2.5 rounded bg-slate-900 border border-slate-800 text-[11px] text-slate-400 text-center">
-                                Очікування оперативних сповіщень про підльоти...
+                            <div class="p-2.5 rounded bg-zinc-900 border border-zinc-800 text-[11px] text-slate-400 text-center">
+                                Спостереження активне. Очікування сповіщень оператора...
                             </div>
                         </div>
                     </div>
 
-                    <div class="mt-3 text-[11px] text-slate-400 p-2 bg-slate-900/60 rounded border border-slate-800">
-                        <div class="font-semibold text-slate-300 flex items-center gap-1 mb-1">
-                            <i data-lucide="bell-ring" class="w-3.5 h-3.5 text-amber-400"></i> Автоматичне оповіщення бійців:
+                    <div class="mt-3 text-[11px] text-slate-300 p-2.5 bg-[#1A261D] rounded border border-[#384A3C]">
+                        <div class="font-zsu font-bold text-[#E5A93C] flex items-center gap-1 mb-1">
+                            <i data-lucide="bell" class="w-3.5 h-3.5"></i> МИТТЄВЕ СПОВІЩЕННЯ БІЙЦІВ:
                         </div>
-                        Коли ви ставите загрозу, бійці з терміналами «Графіт Лайт» у радіусі небезпеки миттєво отримують тактичну вібрацію та пуш із дистанцією та курсом об'єкта.
+                        Коли оператор додає ціль або перетягує її маркер, бійці в окопах у зоні підльоту отримують вібрацію та повідомлення: <em>«Увага! Mavic, 1.5 км від вас, курс Захід»</em>.
                     </div>
                 </div>
 
                 <div class="pt-3">
-                    <button onclick="testSimulateRadioSpotter()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded text-xs font-semibold text-cyan-300 flex items-center justify-center gap-1.5 transition">
-                        <i data-lucide="radio" class="w-4 h-4"></i> Зімітувати радіодоповідь спостерігача
+                    <button onclick="testSimulateRadioSpotter()" class="w-full py-2 bg-[#2B3D2E] hover:bg-[#384A3C] border border-[#384A3C] rounded text-xs font-zsu font-bold text-[#E5A93C] flex items-center justify-center gap-1.5 transition">
+                        <i data-lucide="radio" class="w-4 h-4"></i> ІМІТУВАТИ ДОПОВІДЬ СПОСТЕРІГАЧА (РАЦІЯ)
                     </button>
                 </div>
             </div>
 
-            <!-- Footer Telemetry -->
-            <div class="p-2.5 bg-slate-950 border-t border-slate-800 text-[10px] mono-font flex items-center justify-between text-slate-500">
-                <span>KYIV MGRS GRID: ACTIVE</span>
-                <span class="text-cyan-400">ВЕРСІЯ: 2.4-TACTICAL</span>
+            <!-- Footer Meta -->
+            <div class="p-2.5 bg-[#141A16] border-t border-[#384A3C] text-[10px] mono-font flex items-center justify-between text-slate-400">
+                <span>KYIV MGRS: КВ-01..КВ-64</span>
+                <span class="text-[#E5A93C] font-bold">СПО ЗСУ «ГРАФІТ»</span>
             </div>
         </div>
     </div>
 
-    <!-- QUICK NOTIFICATION TOAST -->
-    <div id="toastNotification" class="fixed bottom-5 right-5 sm:right-[410px] z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
-        <div class="bg-red-950/95 border-2 border-red-500 text-white px-4 py-2.5 rounded-lg shadow-2xl flex items-center gap-3">
-            <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-400 animate-bounce"></i>
+    <!-- TOAST ALERT -->
+    <div id="toastNotification" class="fixed bottom-5 right-5 sm:right-[410px] z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="bg-[#1A261D] border-2 border-[#9B1B30] text-white px-4 py-2.5 rounded shadow-2xl flex items-center gap-3">
+            <i data-lucide="alert-octagon" class="w-5 h-5 text-[#E5A93C] shrink-0"></i>
             <div>
-                <div class="text-xs font-extrabold uppercase tracking-wide text-red-200" id="toastTitle">УВАГА: ЦІЛЬ В ПОВІТРІ</div>
+                <div class="text-xs font-zsu font-bold text-red-300" id="toastTitle">УВАГА: ЦІЛЬ В ПОВІТРІ</div>
                 <div class="text-xs text-slate-200" id="toastBody">Mavic, 1.5 км від позиції, курс Захід</div>
             </div>
         </div>
     </div>
 
     <script>
-        // STRICT KYIV BOUNDS: Map will be strictly locked inside this bounding box
+        // STRICT KYIV BOUNDS: Operator view is hard-locked within the Kyiv metropolitan sector
         const KYIV_BOUNDS = [
-            [50.3150, 30.2300], // Southwest corner of Kyiv
-            [50.5850, 30.8200]  // Northeast corner of Kyiv
+            [50.3150, 30.2300], // Southwest Kyiv
+            [50.5850, 30.8200]  // Northeast Kyiv
         ];
-        const KYIV_CENTER = [50.4501, 30.5234]; // Khreshchatyk / Independence Square
-        const FRIENDLY_BASE_COORDS = [50.4400, 30.5400]; // Pechersk Position
+        const KYIV_CENTER = [50.4501, 30.5234]; // Khreshchatyk / Kyiv Center
+        const FRIENDLY_BASE_COORDS = [50.4400, 30.5400]; // Pechersk OP Dnipro-1
 
-        // Tactical App State
+        // Map and State Variables
         let map;
+        let osmRealLayer = null;
+        let esriSatLayer = null;
         let isAudioMuted = false;
         let isQuickPlotMode = false;
         let tempMarker = null;
-        let tempCoords = null;
-        let threatCounter = 42; // Incremental target ID
-        let activeTargets = new Map(); // targetId -> Target Data Object
-        let gridPolygons = []; // Tactical grid squares
+        let threatCounter = 42;
+        let activeTargets = new Map();
+        let gridPolygons = [];
 
-        // Current target creation form state
+        // Target Draft State
         let currentDraft = {
             type: 'mavic',
             heading: 270,
@@ -428,12 +441,12 @@
             squareName: 'Квадрат 42'
         };
 
-        // Audio Synthesis using Web Audio API (No external sound files required)
+        // Synthesize Military Tone Audio using Web Audio API (No external sound files required)
         let audioCtx = null;
         function getAudioContext() {
             if (!audioCtx) {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                audioCtx = new AudioContext();
+                const AudioClass = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioClass();
             }
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
@@ -449,27 +462,33 @@
                 const gain = ctx.createGain();
                 osc.type = type;
                 osc.frequency.setValueAtTime(freq, ctx.currentTime);
-                gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                gain.gain.setValueAtTime(0.18, ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
                 osc.connect(gain);
                 gain.connect(ctx.destination);
                 osc.start();
                 osc.stop(ctx.currentTime + duration);
-            } catch (e) {
-                console.warn("Audio playback not yet initialized by user action.");
-            }
+            } catch(e) {}
         }
 
         function playThreatAlarm() {
             if (isAudioMuted) return;
-            playTacticalBeep(1050, 0.15, 'sawtooth');
-            setTimeout(() => playTacticalBeep(1400, 0.25, 'sawtooth'), 120);
-        }
-
-        function playInterceptionSound() {
-            if (isAudioMuted) return;
-            playTacticalBeep(520, 0.1, 'square');
-            setTimeout(() => playTacticalBeep(320, 0.3, 'triangle'), 90);
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(500, now);
+                osc.frequency.exponentialRampToValueAtTime(950, now + 0.18);
+                osc.frequency.exponentialRampToValueAtTime(500, now + 0.36);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } catch(e) {}
         }
 
         function toggleAudioMute() {
@@ -477,58 +496,89 @@
             const icon = document.getElementById('audioIcon');
             if (isAudioMuted) {
                 icon.setAttribute('data-lucide', 'volume-x');
-                icon.classList.remove('text-cyan-400');
+                icon.classList.remove('text-[#E5A93C]');
                 icon.classList.add('text-slate-500');
             } else {
                 icon.setAttribute('data-lucide', 'volume-2');
+                icon.classList.add('text-[#E5A93C]');
                 icon.classList.remove('text-slate-500');
-                icon.classList.add('text-cyan-400');
-                playTacticalBeep(900, 0.1);
+                playTacticalBeep(880, 0.08);
             }
             lucide.createIcons();
         }
 
-        // Initialize Map locked to Kyiv
+        // Initialize Map Locked to Kyiv with 100% REAL OpenStreetMap tiles
         function initMap() {
             map = L.map('map', {
                 center: KYIV_CENTER,
                 zoom: 12,
                 minZoom: 11,
-                maxZoom: 16,
-                maxBounds: KYIV_BOUNDS, // RESTRICTED BOUNDS: Prevents operator from leaving Kyiv
-                maxBoundsViscosity: 1.0, // Hard stop at boundaries
+                maxZoom: 17,
+                maxBounds: KYIV_BOUNDS,      // BOUNDARY LOCK: Operator cannot leave Kyiv
+                maxBoundsViscosity: 1.0,     // Solid elastic rebound at edges
                 zoomControl: false,
                 attributionControl: false
             });
 
-            // Modern Dark Tile Layer (CartoDB Dark Matter)
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                subdomains: 'abcd',
-                maxZoom: 19
-            }).addTo(map);
+            // 1. REAL GENUINE OPENSTREETMAP (Standard direct free tiles, NO darkening filter)
+            osmRealLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                crossOrigin: true
+            });
 
-            // Add Tactical Zoom Control in bottom right
+            // 2. High-Resolution Public Satellite Layer (Esri World Imagery, 100% Free)
+            esriSatLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 19
+            });
+
+            // Add genuine real OpenStreetMap by default
+            osmRealLayer.addTo(map);
+
+            // Zoom control bottom-right
             L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-            // Draw Kyiv Bounding Perimeter Highlight
+            // Draw Kyiv Metropolitan Outer Perimeter
             L.rectangle(KYIV_BOUNDS, {
-                color: '#06b6d4',
-                weight: 1.5,
+                color: '#9B1B30',
+                weight: 2,
                 fill: false,
-                dashArray: '6, 6'
+                dashArray: '8, 6'
             }).addTo(map);
 
-            // Render Tactical Grid Over Kyiv (Squares 01 to 64)
+            // Build Tactical 8x8 Grid Squares (КВ-01 to КВ-64)
             generateKyivTacticalGrid();
 
-            // Render Friendly Post ("ОП Дніпро-1")
+            // Friendly Base "ОП Дніпро-1"
             renderFriendlyPosition();
 
-            // Map Click & Long Tap Handlers
+            // Event Listeners for Operator Placement
             setupMapInteractions();
         }
 
-        // Generate 8x8 Tactical Grid Squares covering Kyiv
+        // Switch between genuine Real OSM and Real Satellite
+        function switchMapLayer(type) {
+            const btnOsm = document.getElementById('btnOsmReal');
+            const btnSat = document.getElementById('btnSatReal');
+
+            if (type === 'sat') {
+                if (map.hasLayer(osmRealLayer)) map.removeLayer(osmRealLayer);
+                esriSatLayer.addTo(map);
+                esriSatLayer.bringToBack();
+
+                btnSat.className = "px-2.5 py-1 rounded bg-[#2B3D2E] text-white font-bold border border-[#E5A93C]/40 shadow transition";
+                btnOsm.className = "px-2.5 py-1 rounded text-slate-300 hover:text-white transition";
+            } else {
+                if (map.hasLayer(esriSatLayer)) map.removeLayer(esriSatLayer);
+                osmRealLayer.addTo(map);
+                osmRealLayer.bringToBack();
+
+                btnOsm.className = "px-2.5 py-1 rounded bg-[#2B3D2E] text-white font-bold border border-[#E5A93C]/40 shadow transition";
+                btnSat.className = "px-2.5 py-1 rounded text-slate-300 hover:text-white transition";
+            }
+            playTacticalBeep(700, 0.04);
+        }
+
+        // Generate 8x8 Military Grid Squares over Kyiv
         function generateKyivTacticalGrid() {
             const latStep = (KYIV_BOUNDS[1][0] - KYIV_BOUNDS[0][0]) / 8;
             const lngStep = (KYIV_BOUNDS[1][1] - KYIV_BOUNDS[0][1]) / 8;
@@ -542,31 +592,28 @@
                     const east = west + lngStep;
                     const squareId = squareIndex;
                     const squareName = `Квадрат ${squareId}`;
-
                     const bounds = [[south, west], [north, east]];
+
+                    // Clear high-contrast grid lines visible over real streets
                     const polygon = L.rectangle(bounds, {
-                        color: '#1e293b',
-                        weight: 0.8,
-                        fillColor: '#06b6d4',
+                        color: '#2B3D2E',
+                        weight: 1,
+                        fillColor: '#E5A93C',
                         fillOpacity: 0.02,
                         interactive: false
                     }).addTo(map);
 
-                    // Center marker label for square
                     const centerLat = south + latStep / 2;
                     const centerLng = west + lngStep / 2;
-                    
+
                     const labelIcon = L.divIcon({
                         className: 'tactical-grid-label',
                         html: `<span>КВ-${squareId < 10 ? '0' + squareId : squareId}</span>`,
-                        iconSize: [50, 20],
-                        iconAnchor: [25, 10]
+                        iconSize: [46, 18],
+                        iconAnchor: [23, 9]
                     });
 
-                    const labelMarker = L.marker([centerLat, centerLng], { 
-                        icon: labelIcon, 
-                        interactive: false 
-                    }).addTo(map);
+                    L.marker([centerLat, centerLng], { icon: labelIcon, interactive: false }).addTo(map);
 
                     gridPolygons.push({
                         id: squareId,
@@ -581,13 +628,39 @@
             }
         }
 
-        // Search & Highlight Square by Number or Name
+        // Friendly base marker
+        function renderFriendlyPosition() {
+            const friendlyIcon = L.divIcon({
+                className: 'custom-friendly-icon',
+                html: `
+                    <div class="relative flex items-center justify-center w-8 h-8">
+                        <div class="absolute inset-0 bg-emerald-500/30 rounded-full pulse-beacon"></div>
+                        <div class="w-6 h-6 bg-[#2B3D2E] rounded border-2 border-emerald-400 flex items-center justify-center shadow-lg">
+                            <span class="text-[9px] font-black text-white font-zsu">ЗСУ</span>
+                        </div>
+                    </div>
+                `,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+            });
+
+            L.marker(FRIENDLY_BASE_COORDS, { icon: friendlyIcon, interactive: true })
+                .addTo(map)
+                .bindPopup(`
+                    <div class="text-xs p-1">
+                        <strong class="text-emerald-400 font-zsu">ОП «Дніпро-1» (Печерськ)</strong><br>
+                        <span class="text-slate-300">Опорний вузол зв'язку та ППО</span><br>
+                        <span class="mono-font text-[#E5A93C]">Квадрат 45</span>
+                    </div>
+                `);
+        }
+
+        // 1. Пошук локації на карті (за квадратом або координатами)
         function handleSearchSquare() {
             const input = document.getElementById('gridSearchInput');
             const val = input.value.trim().toLowerCase();
             if (!val) return;
 
-            // Extract digits or match square name
             const matchNumber = val.match(/\d+/);
             let targetSquare = null;
 
@@ -597,78 +670,60 @@
             }
 
             if (targetSquare) {
-                map.flyToBounds(targetSquare.bounds, { duration: 0.8 });
-                // Pulse polygon border
+                map.flyToBounds(targetSquare.bounds, { duration: 0.6 });
                 targetSquare.polygon.setStyle({
-                    color: '#f59e0b',
-                    weight: 2.5,
-                    fillOpacity: 0.15
+                    color: '#9B1B30',
+                    weight: 3,
+                    fillOpacity: 0.2
                 });
                 setTimeout(() => {
                     targetSquare.polygon.setStyle({
-                        color: '#1e293b',
-                        weight: 0.8,
+                        color: '#2B3D2E',
+                        weight: 1,
                         fillOpacity: 0.02
                     });
-                }, 3000);
+                }, 3500);
 
-                // Prompt user to plot threat directly in this square
                 openRapidPlotModal(targetSquare.center[0], targetSquare.center[1], targetSquare.name);
                 playTacticalBeep(650, 0.1);
             } else {
-                showToast("КВАДРАТ НЕ ЗНАЙДЕНО", "Введіть число від 1 до 64 (межі Києва)", "warning");
+                showToast("КВАДРАТ НЕ ЗНАЙДЕНО", "Введіть номер від 1 до 64 (сектор міста Київ)", "warning");
             }
         }
 
-        // Draw friendly base post
-        function renderFriendlyPosition() {
-            const friendlyIcon = L.divIcon({
-                className: 'custom-friendly-icon',
-                html: `
-                    <div class="relative flex items-center justify-center w-7 h-7">
-                        <div class="absolute inset-0 bg-emerald-500/20 rounded-full animate-ping"></div>
-                        <div class="w-5 h-5 bg-emerald-600 rounded-full border-2 border-white flex items-center justify-center shadow-lg">
-                            <span class="text-[9px] font-black text-white mono-font">ОП</span>
-                        </div>
-                    </div>
-                `,
-                iconSize: [28, 28],
-                iconAnchor: [14, 14]
-            });
-
-            L.marker(FRIENDLY_BASE_COORDS, { icon: friendlyIcon, interactive: true })
-                .addTo(map)
-                .bindPopup(`
-                    <div class="text-xs">
-                        <strong class="text-emerald-400">ОП «Дніпро-1» (Печерськ)</strong><br>
-                        <span class="text-slate-300">Ваш опорний сектор зв'язку.</span><br>
-                        <span class="mono-font text-slate-400">Квадрат 45</span>
-                    </div>
-                `);
+        // Find which tactical square contains given coordinate
+        function findSquareForCoords(lat, lng) {
+            for (let sq of gridPolygons) {
+                const b = sq.bounds;
+                if (lat >= b[0][0] && lat <= b[1][0] && lng >= b[0][1] && lng <= b[1][1]) {
+                    return sq.name;
+                }
+            }
+            return "Київ (Сектор Центр)";
         }
 
-        // Setup Map Right-Click & Touch Long-Press
+        // 2. Виставлення маркера («Клік» / Правий клік / Довгий тап)
         function setupMapInteractions() {
             // Desktop: Right Click
             map.on('contextmenu', function(e) {
                 handleUserPlacedPoint(e.latlng.lat, e.latlng.lng);
             });
 
-            // Standard Click (Active when Plot Mode toggle is on)
+            // Normal Click (if Quick Plot Mode button is toggled)
             map.on('click', function(e) {
                 if (isQuickPlotMode) {
                     handleUserPlacedPoint(e.latlng.lat, e.latlng.lng);
-                    toggleQuickPlotMode(); // auto exit mode after 1 point
+                    toggleQuickPlotMode();
                 }
             });
 
-            // Mobile/Tablet: Long press handling
+            // Mobile / Tablet: Long tap detection
             let touchTimer;
             map.on('mousedown', function(e) {
-                if (e.originalEvent.pointerType === 'touch' || e.originalEvent.touches) {
+                if (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.touches)) {
                     touchTimer = setTimeout(() => {
                         handleUserPlacedPoint(e.latlng.lat, e.latlng.lng);
-                    }, 650);
+                    }, 550);
                 }
             });
 
@@ -677,52 +732,37 @@
             });
         }
 
-        // Find which tactical square a lat/lng belongs to
-        function findSquareForCoords(lat, lng) {
-            for (let sq of gridPolygons) {
-                const b = sq.bounds;
-                if (lat >= b[0][0] && lat <= b[1][0] && lng >= b[0][1] && lng <= b[1][1]) {
-                    return sq.name;
-                }
-            }
-            return "Київ (Сектор ЦЕНТР)";
-        }
-
-        // Toggle Quick Plot Mode for single clicks
         function toggleQuickPlotMode() {
             isQuickPlotMode = !isQuickPlotMode;
             const btn = document.getElementById('plotModeBtn');
             const text = document.getElementById('plotModeText');
             if (isQuickPlotMode) {
-                btn.classList.add('bg-amber-600', 'border-amber-400');
-                btn.classList.remove('bg-slate-800/90', 'border-slate-600');
-                text.innerText = "Клікніть на карті...";
+                btn.classList.add('bg-[#9B1B30]', 'border-[#E5A93C]');
+                btn.classList.remove('bg-[#2B3D2E]', 'border-[#384A3C]');
+                text.innerText = "КЛІКНІТЬ ТОЧКУ НА КАРТІ...";
             } else {
-                btn.classList.remove('bg-amber-600', 'border-amber-400');
-                btn.classList.add('bg-slate-800/90', 'border-slate-600');
-                text.innerText = "Режим нанесення: Звичайний";
+                btn.classList.remove('bg-[#9B1B30]', 'border-[#E5A93C]');
+                btn.classList.add('bg-[#2B3D2E]', 'border-[#384A3C]');
+                text.innerText = "РЕЖИМ НАНЕСЕННЯ: ЗВИЧАЙНИЙ";
             }
         }
 
-        // 2. Виставлення тимчасового маркера («Точка інтересу»)
         function handleUserPlacedPoint(lat, lng) {
             playTacticalBeep(780, 0.08);
 
-            // Remove existing temporary point if any
             if (tempMarker) {
                 map.removeLayer(tempMarker);
             }
 
-            tempCoords = [lat, lng];
             const sqName = findSquareForCoords(lat, lng);
 
-            // Glowing temporary "Точка інтересу" icon
+            // Temporary Pulsing "Точка інтересу" icon
             const poiIcon = L.divIcon({
                 className: 'custom-poi-marker',
                 html: `
                     <div class="relative flex items-center justify-center w-8 h-8">
-                        <div class="absolute inset-0 rounded-full border-2 border-amber-400 target-ping"></div>
-                        <div class="w-3.5 h-3.5 bg-amber-400 rounded-full shadow-lg border-2 border-black"></div>
+                        <div class="absolute inset-0 rounded-full border-2 border-[#E5A93C] pulse-beacon"></div>
+                        <div class="w-4 h-4 bg-[#E5A93C] rounded-full shadow-lg border-2 border-black"></div>
                     </div>
                 `,
                 iconSize: [32, 32],
@@ -731,17 +771,18 @@
 
             tempMarker = L.marker([lat, lng], { icon: poiIcon }).addTo(map);
 
-            // Open rapid card modal
             openRapidPlotModal(lat, lng, sqName);
         }
 
-        // 3. Відкриття швидкої картки цілі (у 2-3 кліки)
+        // 3. Заповнення швидкої картки цілі (у 2–3 кліки)
         function openRapidPlotModal(lat, lng, sqName) {
             currentDraft.lat = lat;
             currentDraft.lng = lng;
             currentDraft.squareName = sqName;
 
-            document.getElementById('modalTargetCoords').innerText = `${sqName} [${lat.toFixed(3)}, ${lng.toFixed(3)}]`;
+            document.getElementById('modalTargetSquare').innerText = sqName.toUpperCase();
+            document.getElementById('modalTargetCoords').innerText = `[${lat.toFixed(3)}, ${lng.toFixed(3)}]`;
+            
             const modal = document.getElementById('rapidCardModal');
             modal.classList.remove('hidden');
         }
@@ -754,16 +795,15 @@
             }
         }
 
-        // Quick Preset Handlers
         function selectThreatType(type) {
             currentDraft.type = type;
             document.querySelectorAll('#threatTypeGroup .threat-btn').forEach(btn => {
                 if (btn.dataset.type === type) {
-                    btn.classList.add('active', 'bg-red-950/40', 'border-red-500/80', 'text-white');
-                    btn.classList.remove('bg-slate-800/70', 'border-slate-700', 'text-slate-300');
+                    btn.classList.add('active', 'bg-[#9B1B30]/30', 'border-[#9B1B30]', 'text-white');
+                    btn.classList.remove('bg-[#141A16]', 'border-[#384A3C]', 'text-slate-300');
                 } else {
-                    btn.classList.remove('active', 'bg-red-950/40', 'border-red-500/80', 'text-white');
-                    btn.classList.add('bg-slate-800/70', 'border-slate-700', 'text-slate-300');
+                    btn.classList.remove('active', 'bg-[#9B1B30]/30', 'border-[#9B1B30]', 'text-white');
+                    btn.classList.add('bg-[#141A16]', 'border-[#384A3C]', 'text-slate-300');
                 }
             });
             playTacticalBeep(920, 0.04);
@@ -776,11 +816,11 @@
 
             document.querySelectorAll('.heading-btn').forEach(btn => {
                 if (parseInt(btn.dataset.heading, 10) === angle) {
-                    btn.classList.add('active', 'bg-amber-600/30', 'text-amber-300', 'border-amber-500/80');
-                    btn.classList.remove('bg-slate-800', 'border-slate-700');
+                    btn.classList.add('active', 'bg-[#E5A93C]/20', 'text-[#E5A93C]', 'border-[#E5A93C]');
+                    btn.classList.remove('bg-[#141A16]', 'border-[#384A3C]');
                 } else {
-                    btn.classList.remove('active', 'bg-amber-600/30', 'text-amber-300', 'border-amber-500/80');
-                    btn.classList.add('bg-slate-800', 'border-slate-700');
+                    btn.classList.remove('active', 'bg-[#E5A93C]/20', 'text-[#E5A93C]', 'border-[#E5A93C]');
+                    btn.classList.add('bg-[#141A16]', 'border-[#384A3C]');
                 }
             });
             playTacticalBeep(700, 0.03);
@@ -790,11 +830,11 @@
             currentDraft.altitude = alt;
             document.querySelectorAll('.alt-btn').forEach(btn => {
                 if (btn.innerText.trim() === alt.split(' ')[0]) {
-                    btn.classList.add('active', 'bg-cyan-950/60', 'border-cyan-500', 'text-cyan-300');
-                    btn.classList.remove('bg-slate-800', 'border-slate-700', 'text-slate-300');
+                    btn.classList.add('active', 'bg-[#2B3D2E]', 'border-[#E5A93C]', 'text-white');
+                    btn.classList.remove('bg-[#141A16]', 'border-[#384A3C]', 'text-slate-300');
                 } else {
-                    btn.classList.remove('active', 'bg-cyan-950/60', 'border-cyan-500', 'text-cyan-300');
-                    btn.classList.add('bg-slate-800', 'border-slate-700', 'text-slate-300');
+                    btn.classList.remove('active', 'bg-[#2B3D2E]', 'border-[#E5A93C]', 'text-white');
+                    btn.classList.add('bg-[#141A16]', 'border-[#384A3C]', 'text-slate-300');
                 }
             });
             playTacticalBeep(600, 0.03);
@@ -804,29 +844,27 @@
             currentDraft.quantity = qty;
             document.querySelectorAll('.qty-btn').forEach(btn => {
                 if (btn.dataset.qty == qty) {
-                    btn.classList.add('active', 'bg-cyan-950/60', 'border-cyan-500', 'text-cyan-300');
-                    btn.classList.remove('bg-slate-800', 'border-slate-700', 'text-slate-300');
+                    btn.classList.add('active', 'bg-[#2B3D2E]', 'border-[#E5A93C]', 'text-white');
+                    btn.classList.remove('bg-[#141A16]', 'border-[#384A3C]', 'text-slate-300');
                 } else {
-                    btn.classList.remove('active', 'bg-cyan-950/60', 'border-cyan-500', 'text-cyan-300');
-                    btn.classList.add('bg-slate-800', 'border-slate-700', 'text-slate-300');
+                    btn.classList.remove('active', 'bg-[#2B3D2E]', 'border-[#E5A93C]', 'text-white');
+                    btn.classList.add('bg-[#141A16]', 'border-[#384A3C]', 'text-slate-300');
                 }
             });
             playTacticalBeep(600, 0.03);
         }
 
-        // 4. Активація та «Запуск» загрози (Підтвердження оператором)
+        // 4. Активація та «Запуск» загрози
         function confirmThreatLaunch() {
             threatCounter++;
             const targetId = `TRG-${threatCounter}`;
             const targetName = getThreatTypeName(currentDraft.type);
 
-            // Remove temporary POI marker
             if (tempMarker) {
                 map.removeLayer(tempMarker);
                 tempMarker = null;
             }
 
-            // Target Data Structure
             const newTarget = {
                 id: targetId,
                 type: currentDraft.type,
@@ -838,37 +876,31 @@
                 altitude: currentDraft.altitude,
                 quantity: currentDraft.quantity,
                 square: currentDraft.squareName,
-                timestamp: new Date(),
                 speedKmH: getSpeedForThreat(currentDraft.type),
                 marker: null,
                 dangerSector: null,
                 vectorLine: null
             };
 
-            // Instantiate tactical threat layers on map
             renderActiveThreatOnMap(newTarget);
-
-            // Store in state
             activeTargets.set(targetId, newTarget);
 
-            // Play emergency combat sound
             playThreatAlarm();
 
-            // 5. Поширення на мережу (Broadcast to Graphite Light)
+            // 5. Поширення на мережу «Графіт»
             broadcastToGraphiteLight(newTarget);
 
-            // Refresh UI Lists
             updateTargetsSidebar();
             closeTargetModal();
 
-            showToast("ЗАГРОЗА АКТИВОВАНА", `${targetName} (${newTarget.square}) внесено в систему C2`, "danger");
+            showToast("ЗАГРОЗА АКТИВОВАНА", `${targetName} (${newTarget.square}) внесено в оперативну сітку`, "danger");
         }
 
         function getThreatTypeName(type) {
             switch(type) {
-                case 'mavic': return 'Mavic / Мультиротор';
+                case 'mavic': return 'Mavic / Дрон';
                 case 'fpv': return 'FPV-Камікадзе';
-                case 'recon': return 'Розвідник (Орлан/Zala)';
+                case 'recon': return 'Крило-Розвідник';
                 case 'missile': return 'КАБ / Shahed';
                 default: return 'БПЛА';
             }
@@ -879,23 +911,23 @@
                 case 'mavic': return 55;
                 case 'fpv': return 110;
                 case 'recon': return 85;
-                case 'missile': return 190;
+                case 'missile': return 195;
                 default: return 60;
             }
         }
 
-        // Render Threat Icon, Vector Arrow & Dynamic Threat Cone
+        // Render Threat Icon and Dead-Reckoning Vector & Cone
         function renderActiveThreatOnMap(target) {
-            // Custom Hostile Red Pulsing Marker with Drag-and-Drop capability
+            // Highly distinguishable Cossack Crimson Hostile Marker
             const targetIcon = L.divIcon({
                 className: 'tactical-hostile-marker',
                 html: `
                     <div class="relative flex items-center justify-center w-10 h-10 cursor-grab active:cursor-grabbing">
-                        <div class="absolute -inset-1 rounded-full bg-red-600/30 animate-ping"></div>
-                        <div class="w-7 h-7 bg-red-600 border-2 border-white rounded-full flex items-center justify-center shadow-xl">
+                        <div class="absolute -inset-1 rounded-full bg-[#9B1B30]/40 pulse-beacon"></div>
+                        <div class="w-7 h-7 bg-[#9B1B30] border-2 border-white rounded-full flex items-center justify-center shadow-2xl">
                             <span class="text-[10px] font-black text-white mono-font">${target.quantity > 1 ? target.quantity : '!'}</span>
                         </div>
-                        <div class="absolute -bottom-4 bg-red-950/90 border border-red-600/80 px-1 py-0.2 rounded text-[9px] font-bold text-red-200 mono-font whitespace-nowrap shadow">
+                        <div class="absolute -bottom-4 bg-[#141A16] border border-[#9B1B30] px-1 py-0.2 rounded text-[9px] font-bold text-red-300 mono-font shadow">
                             ${target.id}
                         </div>
                     </div>
@@ -904,7 +936,7 @@
                 iconAnchor: [20, 20]
             });
 
-            // 6. Супровід «ручної» цілі: draggable: true
+            // 6. Супровід «ручної» цілі: drag-and-drop
             const marker = L.marker([target.lat, target.lng], {
                 icon: targetIcon,
                 draggable: true,
@@ -912,40 +944,34 @@
             }).addTo(map);
 
             target.marker = marker;
-
-            // Generate motion trajectory & danger sector polygon
             updateThreatProjectionShapes(target);
 
-            // Drag-and-Drop event listeners for manual radio update
+            // Dragging recalculates course automatically based on movement
             marker.on('drag', function(e) {
                 const newPos = e.target.getLatLng();
-                // Compute new heading angle automatically from previous position
                 const prevPos = L.latLng(target.lat, target.lng);
                 const newHeading = computeHeadingAngle(prevPos, newPos);
-                
+
                 target.heading = Math.round(newHeading);
                 target.headingName = getCompassDirectionName(newHeading);
                 target.lat = newPos.lat;
                 target.lng = newPos.lng;
                 target.square = findSquareForCoords(newPos.lat, newPos.lng);
 
-                // Update geometry in real-time
                 updateThreatProjectionShapes(target);
             });
 
             marker.on('dragend', function() {
                 playTacticalBeep(850, 0.05);
-                broadcastToGraphiteLight(target, true); // Update notification
+                broadcastToGraphiteLight(target, true);
                 updateTargetsSidebar();
             });
 
-            // Click brings up quick tactical action menu (Destroyed / Lost Contact)
             marker.on('click', function() {
                 openTargetActionsPopup(target);
             });
         }
 
-        // Calculate heading degrees from pointA to pointB
         function computeHeadingAngle(p1, p2) {
             const dy = p2.lat - p1.lat;
             const dx = Math.cos(Math.PI / 180 * p1.lat) * (p2.lng - p1.lng);
@@ -960,30 +986,26 @@
             return dirs[index];
         }
 
-        // Draw Extrapolated Danger Cone and Vector Line (Dead Reckoning)
+        // Draw Extrapolated Dead Reckoning Cone & Line
         function updateThreatProjectionShapes(target) {
-            // Remove previous vector / cone if exists
             if (target.vectorLine) map.removeLayer(target.vectorLine);
             if (target.dangerSector) map.removeLayer(target.dangerSector);
 
             const start = L.latLng(target.lat, target.lng);
-            const distKm = 3.5; // Projected 3-5 minute dead reckoning danger zone
+            const distKm = 3.6;
             const angleRad = (target.heading * Math.PI) / 180;
 
-            // Project tip of direction
             const endLat = target.lat + (distKm / 111.32) * Math.cos(angleRad);
             const endLng = target.lng + (distKm / (111.32 * Math.cos(target.lat * (Math.PI / 180)))) * Math.sin(angleRad);
             const end = L.latLng(endLat, endLng);
 
-            // Vector line
             target.vectorLine = L.polyline([start, end], {
-                color: '#ef4444',
-                weight: 2.5,
+                color: '#9B1B30',
+                weight: 3,
                 dashArray: '5, 8'
             }).addTo(map);
 
-            // Sector polygon points (30-degree threat sector cone)
-            const spread = 22 * (Math.PI / 180);
+            const spread = 24 * (Math.PI / 180);
             const leftAngle = angleRad - spread;
             const rightAngle = angleRad + spread;
 
@@ -999,31 +1021,31 @@
                 end,
                 [rightLat, rightLng]
             ], {
-                color: '#dc2626',
-                weight: 1,
-                fillColor: '#ef4444',
-                fillOpacity: 0.18
+                color: '#9B1B30',
+                weight: 1.5,
+                fillColor: '#BF2642',
+                fillOpacity: 0.25
             }).addTo(map);
         }
 
-        // Quick Context Popup on Active Target (Знищено / Втрачено)
+        // Popup Actions (Знищено / Втрачено контакт)
         function openTargetActionsPopup(target) {
             const popupContent = document.createElement('div');
             popupContent.className = 'text-xs p-1';
             popupContent.innerHTML = `
-                <div class="font-bold text-red-400 mb-1 border-b border-slate-700 pb-1 flex justify-between">
+                <div class="font-zsu font-bold text-red-400 mb-1 border-b border-[#384A3C] pb-1 flex justify-between">
                     <span>${target.id} // ${target.typeName}</span>
-                    <span class="mono-font text-amber-400">${target.headingName}</span>
+                    <span class="mono-font text-[#E5A93C]">${target.headingName}</span>
                 </div>
-                <div class="text-[11px] text-slate-300 mb-2">
+                <div class="text-[11px] text-slate-200 mb-2">
                     Локація: <strong>${target.square}</strong> | Ешелон: ${target.altitude}<br>
-                    Швидкість розрахункова: ~${target.speedKmH} км/год
+                    Розрахункова швидкість: ~${target.speedKmH} км/год
                 </div>
                 <div class="flex gap-1.5 pt-1">
-                    <button id="destroyBtn-${target.id}" class="flex-1 py-1.5 px-2 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded text-[10px] uppercase">
+                    <button id="destroyBtn-${target.id}" class="flex-1 py-1.5 px-2 bg-emerald-700 hover:bg-emerald-600 text-white font-zsu font-bold rounded text-[11px]">
                         ЗНИЩЕНО (ППО)
                     </button>
-                    <button id="lostBtn-${target.id}" class="flex-1 py-1.5 px-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold rounded text-[10px] uppercase">
+                    <button id="lostBtn-${target.id}" class="flex-1 py-1.5 px-2 bg-[#2B3D2E] hover:bg-[#384A3C] text-slate-200 font-zsu font-bold rounded text-[11px]">
                         ВТРАЧЕНО КОНТАКТ
                     </button>
                 </div>
@@ -1036,25 +1058,23 @@
                 const lostBtn = document.getElementById(`lostBtn-${target.id}`);
                 if (destroyBtn) destroyBtn.onclick = () => terminateTarget(target.id, 'DESTROYED');
                 if (lostBtn) lostBtn.onclick = () => terminateTarget(target.id, 'LOST');
-            }, 50);
+            }, 60);
         }
 
-        // Terminate Target: Intercepted or Contact Lost
         function terminateTarget(targetId, reason) {
             const target = activeTargets.get(targetId);
             if (!target) return;
 
             if (reason === 'DESTROYED') {
-                playInterceptionSound();
-                showToast("ЦІЛЬ ЗНИЩЕНО", `${target.id} (${target.typeName}) успішно збито / уражено`, "success");
-                addTabletNotification(`✅ ВІДБІЙ ТРИВОГИ: ${target.id} (${target.typeName}) ЗНИЩЕНО в ${target.square}!`, "success");
+                playTacticalBeep(1100, 0.25, 'triangle');
+                showToast("ЦІЛЬ ЗНИЩЕНО", `${target.id} (${target.typeName}) уражено силами ППО`, "success");
+                addTabletNotification(`✅ ВІДБІЙ: ${target.id} (${target.typeName}) ЗНИЩЕНО в ${target.square}!`, "success");
             } else {
-                playTacticalBeep(400, 0.2);
-                showToast("КОНТАКТ ВТРАЧЕНО", `${target.id} зійшов з візуального спостереження`, "warning");
-                addTabletNotification(`⚠️ УВАГА: Втрачено візуальний контакт з ${target.id} (${target.square}).`, "warning");
+                playTacticalBeep(450, 0.2, 'sawtooth');
+                showToast("ВТРАЧЕНО ВІЗУАЛЬНИЙ КОНТАКТ", `${target.id} зник із зони спостереження`, "warning");
+                addTabletNotification(`⚠️ Втрачено візуальний контакт з ${target.id} (${target.square}).`, "warning");
             }
 
-            // Remove layers
             if (target.marker) map.removeLayer(target.marker);
             if (target.vectorLine) map.removeLayer(target.vectorLine);
             if (target.dangerSector) map.removeLayer(target.dangerSector);
@@ -1065,20 +1085,17 @@
 
         // 5. Поширення на мережу «Графіт Лайт»
         function broadcastToGraphiteLight(target, isUpdate = false) {
-            // Calculate distance from friendly position "ОП Дніпро-1"
             const friendlyLatLng = L.latLng(FRIENDLY_BASE_COORDS);
             const targetLatLng = L.latLng(target.lat, target.lng);
-            const distMeters = friendlyLatLng.distanceTo(targetLatLng);
-            const distKm = (distMeters / 1000).toFixed(1);
+            const distKm = (friendlyLatLng.distanceTo(targetLatLng) / 1000).toFixed(1);
 
-            const title = isUpdate ? `ОНОВЛЕНО ТРЕК: ${target.typeName}` : `🚨 УВАГА! ${target.typeName}`;
-            const body = `${distKm} км від вас (${target.square}), курс ${target.headingName}, ешелон ${target.altitude}.`;
+            const alertTitle = isUpdate ? `ОНОВЛЕНО ТРЕК: ${target.typeName}` : `🚨 УВАГА! ${target.typeName}`;
+            const alertText = `${distKm} км від вас (${target.square}), курс ${target.headingName}, ешелон ${target.altitude}.`;
 
-            addTabletNotification(`${title}: ${body}`, "danger");
+            addTabletNotification(`${alertTitle}: ${alertText}`, "danger");
 
-            // Hardware Vibration API Trigger (works on supported Android / mobile devices)
             if ("vibrate" in navigator) {
-                try { navigator.vibrate([200, 100, 200]); } catch (e) {}
+                try { navigator.vibrate([250, 100, 250]); } catch (e) {}
             }
         }
 
@@ -1088,41 +1105,38 @@
 
             const timeStr = new Date().toLocaleTimeString('uk-UA');
             const alertBox = document.createElement('div');
-            
-            let borderClass = "border-red-600 bg-red-950/70 text-red-200";
-            let badgeText = "БОЙОВА ТРИВОГА";
+
+            let borderClass = "border-[#9B1B30] bg-[#9B1B30]/30 text-red-200";
+            let badgeText = "ТРИВОГА СПО";
 
             if (type === "success") {
                 borderClass = "border-emerald-600 bg-emerald-950/70 text-emerald-200";
                 badgeText = "ПІДТВЕРДЖЕННЯ";
             } else if (type === "warning") {
-                borderClass = "border-amber-600 bg-amber-950/70 text-amber-200";
+                borderClass = "border-[#E5A93C] bg-amber-950/60 text-amber-200";
                 badgeText = "ОПЕРАТИВНЕ";
             }
 
-            alertBox.className = `p-2.5 rounded-lg border ${borderClass} text-xs shadow-md animate-pulse`;
+            alertBox.className = `p-2.5 rounded border ${borderClass} text-xs shadow-md animate-pulse`;
             alertBox.innerHTML = `
                 <div class="flex items-center justify-between font-bold mono-font text-[10px] mb-1">
-                    <span>${badgeText}</span>
+                    <span class="font-zsu tracking-wider">${badgeText}</span>
                     <span>${timeStr}</span>
                 </div>
                 <div class="font-semibold leading-tight">${text}</div>
             `;
 
-            // If empty notice exists, clear it
-            if (container.children.length === 1 && container.children[0].innerText.includes('Очікування')) {
+            if (container.children.length === 1 && container.children[0].innerText.includes('Спостереження активне')) {
                 container.innerHTML = '';
             }
 
             container.prepend(alertBox);
         }
 
-        // Test Simulated Radio Report Button
         function testSimulateRadioSpotter() {
             playTacticalBeep(720, 0.1);
             showToast("РАЦІЯ: СПОСТЕРІГАЧ", "«Бачу Мавік над Оболонню, курс Південь!»", "warning");
 
-            // Random coordinates in Obolon (Kyiv North)
             const obolonLat = 50.505 + (Math.random() * 0.02 - 0.01);
             const obolonLng = 30.495 + (Math.random() * 0.02 - 0.01);
 
@@ -1131,7 +1145,6 @@
             setHeading(180, 'ПІВДЕНЬ');
         }
 
-        // Render Targets Sidebar
         function updateTargetsSidebar() {
             const container = document.getElementById('targetsContainer');
             const badge = document.getElementById('targetCountBadge');
@@ -1150,32 +1163,32 @@
 
             activeTargets.forEach(target => {
                 const card = document.createElement('div');
-                card.className = "p-2.5 rounded-lg bg-slate-900 border border-red-500/40 hover:border-red-400 text-xs transition relative group";
+                card.className = "p-2.5 rounded bg-[#141A16] border border-[#9B1B30]/60 hover:border-[#9B1B30] text-xs transition";
                 card.innerHTML = `
                     <div class="flex items-center justify-between mb-1">
-                        <span class="font-bold text-red-400 mono-font flex items-center gap-1.5">
-                            <span class="h-2 w-2 rounded-full bg-red-500 animate-ping"></span>
+                        <span class="font-zsu font-bold text-red-300 text-sm flex items-center gap-1.5">
+                            <span class="h-2 w-2 rounded-full bg-[#9B1B30] animate-ping"></span>
                             ${target.id} // ${target.typeName}
                         </span>
-                        <span class="text-[10px] px-1 bg-red-950 text-red-300 rounded border border-red-800 mono-font">
-                            ${target.quantity > 1 ? target.quantity + ' од.' : '1 од.'}
+                        <span class="text-[10px] px-1.5 bg-[#9B1B30] text-white rounded font-mono font-bold">
+                            ${target.quantity > 1 ? target.quantity + ' ОД.' : '1 ОД.'}
                         </span>
                     </div>
                     <div class="text-[11px] text-slate-300 mono-font grid grid-cols-2 gap-1 mb-2">
                         <div>КВАДРАТ: <strong class="text-white">${target.square}</strong></div>
-                        <div>КУРС: <strong class="text-amber-400">${target.headingName} (${target.heading}°)</strong></div>
+                        <div>КУРС: <strong class="text-[#E5A93C]">${target.headingName} (${target.heading}°)</strong></div>
                         <div>ЕШЕЛОН: <span class="text-cyan-300">${target.altitude}</span></div>
                         <div>ШВИДКІСТЬ: <span class="text-slate-400">~${target.speedKmH} км/г</span></div>
                     </div>
-                    <div class="flex gap-1.5 pt-1 border-t border-slate-800">
-                        <button onclick="focusTarget('${target.id}')" class="flex-1 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded text-[10px] font-semibold">
-                            Фокус на карті
+                    <div class="flex gap-1.5 pt-1 border-t border-[#384A3C]">
+                        <button onclick="focusTarget('${target.id}')" class="flex-1 py-1 bg-[#2B3D2E] hover:bg-[#384A3C] text-slate-200 rounded text-[10px] font-zsu font-bold">
+                            ФОКУС НА КАРТІ
                         </button>
-                        <button onclick="terminateTarget('${target.id}', 'DESTROYED')" class="px-2 py-1 bg-emerald-900/60 hover:bg-emerald-800 text-emerald-300 rounded text-[10px] font-bold">
-                            Збито
+                        <button onclick="terminateTarget('${target.id}', 'DESTROYED')" class="px-2 py-1 bg-emerald-800 hover:bg-emerald-700 text-white rounded text-[10px] font-zsu font-bold">
+                            ЗБИТО
                         </button>
-                        <button onclick="terminateTarget('${target.id}', 'LOST')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded text-[10px]">
-                            Втрачено
+                        <button onclick="terminateTarget('${target.id}', 'LOST')" class="px-2 py-1 bg-[#1A261D] hover:bg-[#2B3D2E] text-slate-400 rounded text-[10px] font-zsu">
+                            ВТРАЧЕНО
                         </button>
                     </div>
                 `;
@@ -1192,12 +1205,10 @@
             }
         }
 
-        // Center back to Kyiv center
         function centerKyiv() {
-            map.flyTo(KYIV_CENTER, 12, { duration: 0.6 });
+            map.flyTo(KYIV_CENTER, 12, { duration: 0.5 });
         }
 
-        // Switch between Active Targets and Graphite-Light Terminal
         function switchTab(tab) {
             const tabTargetsBtn = document.getElementById('tabTargetsBtn');
             const tabLightBtn = document.getElementById('tabLightBtn');
@@ -1205,19 +1216,18 @@
             const tabLightContent = document.getElementById('tabLightContent');
 
             if (tab === 'targets') {
-                tabTargetsBtn.className = "flex-1 py-3 text-cyan-400 border-b-2 border-cyan-400 bg-slate-900/40 flex items-center justify-center gap-1.5 font-bold";
-                tabLightBtn.className = "flex-1 py-3 text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center justify-center gap-1.5 font-bold";
+                tabTargetsBtn.className = "flex-1 py-3 text-[#E5A93C] border-b-2 border-[#E5A93C] bg-[#141A16]/50 flex items-center justify-center gap-1.5";
+                tabLightBtn.className = "flex-1 py-3 text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center justify-center gap-1.5";
                 tabTargetsContent.classList.remove('hidden');
                 tabLightContent.classList.add('hidden');
             } else {
-                tabLightBtn.className = "flex-1 py-3 text-amber-400 border-b-2 border-amber-400 bg-slate-900/40 flex items-center justify-center gap-1.5 font-bold";
-                tabTargetsBtn.className = "flex-1 py-3 text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center justify-center gap-1.5 font-bold";
+                tabLightBtn.className = "flex-1 py-3 text-emerald-400 border-b-2 border-emerald-400 bg-[#141A16]/50 flex items-center justify-center gap-1.5";
+                tabTargetsBtn.className = "flex-1 py-3 text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center justify-center gap-1.5";
                 tabLightContent.classList.remove('hidden');
                 tabTargetsContent.classList.add('hidden');
             }
         }
 
-        // Notification Toast Helper
         function showToast(title, body, type = "danger") {
             const toast = document.getElementById('toastNotification');
             const titleEl = document.getElementById('toastTitle');
@@ -1226,25 +1236,14 @@
             titleEl.innerText = title;
             bodyEl.innerText = body;
 
-            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.remove('translate-y-24', 'opacity-0');
             setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3800);
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3600);
         }
 
-        // Live Clock
-        function updateClock() {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('uk-UA') + " UTC+3";
-            const clockEl = document.getElementById('liveClock');
-            if (clockEl) clockEl.innerText = timeStr;
-        }
-
-        // Window Load & Initialization
         window.addEventListener('DOMContentLoaded', () => {
             initMap();
-            setInterval(updateClock, 1000);
-            updateClock();
             lucide.createIcons();
         });
     </script>
