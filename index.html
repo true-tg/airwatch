@@ -469,19 +469,21 @@
         }
 
         function renderTargetLayers(target) {
-            // Highly visible red target beacon with clean custom tag
+            // Tactical concentric military beacon icon without any text badges
             const iconHtml = `
-                <div class="threat-marker-icon">
-                    <div class="threat-core-badge">${target.icon}</div>
-                    <div class="threat-label-tag">${target.type} ➜ ${target.headingName}</div>
+                <div class="tactical-target-wrap">
+                    <div class="tactical-pulse-ring"></div>
+                    <div class="tactical-core-disc">
+                        <div class="tactical-core-dot"></div>
+                    </div>
                 </div>
             `;
 
             const customMarkerIcon = L.divIcon({
                 className: '',
                 html: iconHtml,
-                iconSize: [36, 36],
-                iconAnchor: [18, 18]
+                iconSize: [38, 38],
+                iconAnchor: [19, 19]
             });
 
             // Marker with drag-and-drop capability
@@ -508,10 +510,6 @@
                 target.headingName = getHeadingText(deg);
                 target.lat = newPos.lat;
                 target.lng = newPos.lng;
-
-                // Update text label tag
-                const label = marker.getElement().querySelector('.threat-label-tag');
-                if (label) label.innerText = `${target.type} ➜ ${target.headingName}`;
 
                 drawDangerCone(target);
             });
