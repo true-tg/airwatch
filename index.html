@@ -3,566 +3,302 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>КИЇВ // КАРТА ПОВІТРЯНИХ ЗАГРОЗ</title>
-    <!-- Leaflet CSS & JS (100% Free, No API key) -->
+    <title>Київський Движ // Повітряна обізнаність</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Oswald:wght@600;700&family=JetBrains+Mono:wght@700;800&display=swap');
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@700;800;900&family=JetBrains+Mono:wght@700&display=swap');
 
         html, body {
-            width: 100vw;
-            height: 100vh;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
-            background: #0f1411;
-            font-family: 'Montserrat', sans-serif;
+            background-color: #f1f5f9;
             user-select: none;
             -webkit-user-select: none;
         }
 
-        /* 16:9 Aspect container helper: fits full screen cleanly */
         #map {
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            cursor: crosshair;
+            width: 100vw;
+            height: 100vh;
+            cursor: crosshair !important;
         }
 
-        /* Pure OpenStreetMap with optimal contrast for screenshot clarity */
-        .leaflet-container {
-            background-color: #dbe4eb !important;
-            font-family: 'Montserrat', sans-serif;
-        }
-
-        /* Suppress default leaflet attribution and controls for 100% clean screenshots */
-        .leaflet-control-container .leaflet-top,
-        .leaflet-control-container .leaflet-bottom {
-            display: none !important;
-        }
-
-        /* 
-           DIAGONAL REPEATING WATERMARK OVERLAY
-           Alternating rows:
-           Row 1: t.me/k_dvizh
-           Row 2: Киевский Движ
-           Pointer-events none ensures zero interference with map clicks & drags
-        */
+        /* Напівпрозорий чорний захисний водяний знак для скриншотів */
         .watermark-overlay {
-            position: absolute;
-            inset: -40%;
-            width: 180%;
-            height: 180%;
-            z-index: 2;
+            position: fixed;
+            inset: -50%;
+            width: 200%;
+            height: 200%;
             pointer-events: none;
-            opacity: 0.16; /* Balanced visibility: protects screenshots while keeping map fully legible */
+            z-index: 999;
             display: flex;
             flex-direction: column;
             justify-content: space-around;
-            transform: rotate(-28deg);
-            overflow: hidden;
+            transform: rotate(-24deg);
+            opacity: 0.22;
         }
 
-        .wm-row {
+        .watermark-row {
             display: flex;
+            justify-content: space-around;
             white-space: nowrap;
-            gap: 5vw;
-            animation: none;
-        }
-
-        .wm-text-link {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: clamp(20px, 2.2vw, 32px);
-            font-weight: 800;
-            color: #0b1528;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-        }
-
-        .wm-text-brand {
-            font-family: 'Montserrat', sans-serif;
-            font-size: clamp(22px, 2.4vw, 34px);
+            font-family: 'Inter', sans-serif;
+            font-size: 26px;
             font-weight: 900;
-            color: #b91c1c;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
-
-        /* Minimalist, zero-chrome Context HUD for target creation */
-        #threatCreatorModal {
-            position: absolute;
-            z-index: 9999;
-            display: none;
-            background: rgba(15, 23, 42, 0.94);
-            border: 2px solid #ef4444;
-            backdrop-filter: blur(10px);
-            border-radius: 10px;
-            padding: 12px;
-            color: #ffffff;
-            width: 290px;
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
-            transform: translate(-50%, -50%);
-        }
-
-        .modal-title {
-            font-family: 'Oswald', sans-serif;
-            font-size: 13px;
-            letter-spacing: 0.05em;
-            color: #f87171;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #334155;
-            padding-bottom: 6px;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-        }
-
-        .modal-section-label {
-            font-size: 10px;
-            font-weight: 700;
-            color: #cbd5e1;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        .types-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 5px;
-            margin-bottom: 10px;
-        }
-
-        .type-btn {
-            background: #1e293b;
-            border: 1px solid #475569;
-            color: #e2e8f0;
-            padding: 6px 8px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            text-align: left;
-            transition: all 0.15s ease;
-        }
-
-        .type-btn.active {
-            background: #dc2626;
-            border-color: #f87171;
-            color: #ffffff;
-        }
-
-        .heading-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 4px;
-            margin-bottom: 12px;
-        }
-
-        .head-btn {
-            background: #1e293b;
-            border: 1px solid #475569;
-            color: #94a3b8;
-            padding: 5px 0;
-            border-radius: 5px;
-            font-size: 10px;
-            font-weight: 800;
-            cursor: pointer;
-            text-align: center;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .head-btn.active {
-            background: #f59e0b;
-            border-color: #fbbf24;
             color: #000000;
-        }
-
-        .actions-row {
-            display: flex;
-            gap: 6px;
-        }
-
-        .confirm-btn {
-            flex: 2;
-            background: #dc2626;
-            color: white;
-            font-family: 'Oswald', sans-serif;
-            font-size: 13px;
-            letter-spacing: 0.05em;
-            padding: 7px;
-            border: none;
-            border-radius: 6px;
-            font-weight: 700;
-            cursor: pointer;
             text-transform: uppercase;
-            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+            letter-spacing: 0.18em;
+            text-shadow: 0 0 1px rgba(255, 255, 255, 0.4);
         }
 
-        .cancel-btn {
-            flex: 1;
-            background: #334155;
-            color: #cbd5e1;
-            font-size: 11px;
-            font-weight: 700;
-            padding: 7px;
+        /* Візуальні стилі маркера з наданого коду */
+        .tactical-hostile-marker {
+            background: transparent;
             border: none;
-            border-radius: 6px;
-            cursor: pointer;
         }
 
-        /* Floating tactical threat badge on the map */
-        .threat-marker-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
+        @keyframes threat-ping {
+            0% { transform: scale(0.8); opacity: 0.8; }
+            50% { transform: scale(1.6); opacity: 0.25; }
+            100% { transform: scale(0.8); opacity: 0.8; }
         }
 
-        .threat-core-badge {
-            width: 32px;
-            height: 32px;
-            background: #dc2626;
-            border: 2px solid #ffffff;
-            border-radius: 50%;
-            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.8), 0 0 0 4px rgba(220, 38, 38, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #ffffff;
-            font-weight: 900;
-            font-size: 13px;
-            cursor: grab;
-        }
-
-        .threat-core-badge:active {
-            cursor: grabbing;
-            transform: scale(1.1);
-        }
-
-        .threat-label-tag {
-            position: absolute;
-            top: 36px;
-            left: 50%;
-            transform: translateX(-50%);
-            white-space: nowrap;
-            background: rgba(15, 23, 42, 0.92);
-            border: 1.5px solid #dc2626;
-            color: #ffffff;
-            font-size: 11px;
-            font-weight: 800;
-            padding: 2px 7px;
-            border-radius: 4px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
-            font-family: 'Montserrat', sans-serif;
-            text-transform: uppercase;
-            pointer-events: none;
-        }
-
-        /* Minimal Quick Target Popup for Deletion / Status */
-        .leaflet-popup-content-wrapper {
-            background: rgba(15, 23, 42, 0.95) !important;
-            border: 1.5px solid #ef4444 !important;
-            color: #ffffff !important;
-            border-radius: 8px !important;
-            padding: 2px !important;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6) !important;
-        }
-        .leaflet-popup-tip {
-            background: rgba(15, 23, 42, 0.95) !important;
-            border: 1px solid #ef4444 !important;
+        .custom-ping {
+            animation: threat-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
         }
     </style>
 </head>
-<body>
+<body class="relative">
 
-    <!-- DIAGONAL WATERMARK PATTERN OVERLAY -->
-    <div class="watermark-overlay" id="watermarkOverlay">
-        <!-- Generates 16 alternating rows for complete screenshot coverage -->
-        <div class="wm-row"><span class="wm-text-link">t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh</span></div>
-        <div class="wm-row"><span class="wm-text-brand">Киевский Движ &nbsp;—&nbsp; Киевский Движ &nbsp;—&nbsp; Киевский Движ &nbsp;—&nbsp; Киевский Движ &nbsp;—&nbsp; Киевский Движ</span></div>
-        <div class="wm-row"><span class="wm-text-link">t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh</span></div>
-        <div class="wm-row"><span class="wm-text-brand">Киевский Движ &nbsp;—&nbsp; Киевский Движ &nbsp;—&nbsp; Киевский Движ &nbsp;—&nbsp; Киевский Движ &nbsp;—&nbsp; Киевский Движ</span></div>
-        <div class="wm-row"><span class="wm-text-link">t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh</span></div>
-        <div class="wm-row"><span class="wm-text-brand">Киевский Движ &nbsp;—&nbsp; Киевский Движ &nbsp;—&nbsp; Киевский Движ &nbsp;—&nbsp; Киевский Движ &nbsp;—&nbsp; Киевский Движ</span></div>
-        <div class="wm-row"><span class="wm-text-link">t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh</span></div>
-        <div class="wm-row"><span class="wm-text-brand">Киевский Движ &nbsp;—&nbsp; Киевский Движ &nbsp;—&nbsp; Киевский Движ &nbsp;—&nbsp; Киевский Движ &nbsp;—&nbsp; Киевский Движ</span></div>
-        <div class="wm-row"><span class="wm-text-link">t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh</span></div>
-        <div class="wm-row"><span class="wm-text-brand">Киевский Движ &nbsp;—&nbsp; Киевский Движ &nbsp;—&nbsp; Киевский Движ &nbsp;—&nbsp; Киевский Движ &nbsp;—&nbsp; Киевский Движ</span></div>
-        <div class="wm-row"><span class="wm-text-link">t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh &nbsp;•&nbsp; t.me/k_dvizh</span></div>
-        <div class="wm-row"><span class="wm-text-brand">Киевский Движ &nbsp;—&nbsp; Киевский Движ &nbsp;—&nbsp; Киевский Движ &nbsp;—&nbsp; Киевский Движ &nbsp;—&nbsp; Киевский Движ</span></div>
-    </div>
-
-    <!-- PURE OPENSTREETMAP CANVAS LOCKED TO KYIV -->
+    <!-- КАРТА КИЄВА БЕЗ ІНТЕРФЕЙСУ -->
     <div id="map"></div>
 
-    <!-- MINIMALIST CONTEXT POPUP (Appears only while setting up a target, hides immediately on Confirm) -->
-    <div id="threatCreatorModal">
-        <div class="modal-title">
-            <span>Нанесення загрози</span>
-            <span id="coordLabel" style="font-size: 10px; color: #94a3b8; font-family: monospace;">[50.45, 30.52]</span>
+    <!-- ЧОРНА ВОДЯНА МАРКА t.me/k_dvizh / Киевский Движ -->
+    <div class="watermark-overlay">
+        <div class="watermark-row">
+            <span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span>
         </div>
-
-        <div class="modal-section-label">Тип об'єкта:</div>
-        <div class="types-grid" id="typeButtons">
-            <button type="button" class="type-btn active" data-type="Шахед" data-icon="⚡">💥 Шахед / Дрон</button>
-            <button type="button" class="type-btn" data-type="Ракета" data-icon="🚀">🚀 Ракета / КАБ</button>
-            <button type="button" class="type-btn" data-type="Розвідник" data-icon="👁️">👁️ Розвідник БПЛА</button>
-            <button type="button" class="type-btn" data-type="Ціль" data-icon="⚠️">⚠️ Невідома ціль</button>
+        <div class="watermark-row">
+            <span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span>
         </div>
-
-        <div class="modal-section-label" style="display:flex; justify-content:space-between;">
-            <span>Напрямок руху:</span>
-            <span id="headingPreview" style="color: #fbbf24; font-weight:800;">ЗАХІД (270°)</span>
+        <div class="watermark-row">
+            <span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span>
         </div>
-        <div class="heading-grid" id="headingButtons">
-            <button type="button" class="head-btn" data-angle="0" data-name="ПІВНІЧ">Пн</button>
-            <button type="button" class="head-btn" data-angle="45" data-name="ПН-СХІД">Пн-Сх</button>
-            <button type="button" class="head-btn" data-angle="90" data-name="СХІД">Сх</button>
-            <button type="button" class="head-btn" data-angle="135" data-name="ПД-СХІД">Пд-Сх</button>
-            <button type="button" class="head-btn" data-angle="180" data-name="ПІВДЕНЬ">Пд</button>
-            <button type="button" class="head-btn" data-angle="225" data-name="ПД-ЗАХІД">Пд-Зх</button>
-            <button type="button" class="head-btn active" data-angle="270" data-name="ЗАХІД">Зх</button>
-            <button type="button" class="head-btn" data-angle="315" data-name="ПН-ЗАХІД">Пн-Зх</button>
+        <div class="watermark-row">
+            <span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span>
         </div>
-
-        <div class="actions-row">
-            <button type="button" class="cancel-btn" onclick="closeCreatorModal()">Скасувати</button>
-            <button type="button" class="confirm-btn" onclick="confirmPlotTarget()">Встановити на карту</button>
+        <div class="watermark-row">
+            <span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span>
+        </div>
+        <div class="watermark-row">
+            <span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span>
+        </div>
+        <div class="watermark-row">
+            <span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span>
+        </div>
+        <div class="watermark-row">
+            <span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span>
         </div>
     </div>
 
-    <!-- SCRIPT LOGIC -->
+    <!-- ШВИДКЕ КОНТЕКСТНЕ МЕНЮ ВСТАНОВЛЕННЯ КУРСУ (З'ЯВЛЯЄТЬСЯ ТІЛЬКИ ПРИ КЛІКУ) -->
+    <div id="quickPromptModal" class="hidden fixed z-[1000] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900/95 text-slate-100 border border-slate-700 p-4 rounded-xl shadow-2xl backdrop-blur-md w-72">
+        <div class="text-xs font-bold uppercase tracking-wider text-red-400 mb-2 pb-1 border-b border-slate-700 flex justify-between items-center">
+            <span>Напрямок руху цілі</span>
+            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-base leading-none">&times;</button>
+        </div>
+        
+        <div class="grid grid-cols-4 gap-1.5 mb-3 text-xs font-bold">
+            <button type="button" onclick="setHeading(0)" data-heading="0" class="h-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-center">Пн</button>
+            <button type="button" onclick="setHeading(45)" data-heading="45" class="h-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-center">Пн-Сх</button>
+            <button type="button" onclick="setHeading(90)" data-heading="90" class="h-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-center">Сх</button>
+            <button type="button" onclick="setHeading(135)" data-heading="135" class="h-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-center">Пд-Сх</button>
+            <button type="button" onclick="setHeading(180)" data-heading="180" class="h-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-center">Пд</button>
+            <button type="button" onclick="setHeading(225)" data-heading="225" class="h-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-center">Пд-Зх</button>
+            <button type="button" onclick="setHeading(270)" data-heading="270" class="h-btn active py-1.5 bg-red-600 border border-red-500 rounded text-center text-white">Зх</button>
+            <button type="button" onclick="setHeading(315)" data-heading="315" class="h-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-center">Пн-Зх</button>
+        </div>
+
+        <button onclick="confirmTarget()" class="w-full py-2 bg-red-600 hover:bg-red-500 text-white rounded font-bold text-xs uppercase tracking-wide transition shadow-lg shadow-red-700/40">
+            Нанести загрозу
+        </button>
+    </div>
+
     <script>
-        // STRICT KYIV CITY BOUNDARIES: Lock user view within Kyiv metro area
+        // Межі Києва (карта зафіксована)
         const KYIV_BOUNDS = [
-            [50.3100, 30.2200], // Southwest boundary
-            [50.5900, 30.8250]  // Northeast boundary
+            [50.3150, 30.2300],
+            [50.5850, 30.8200]
         ];
-        const KYIV_CENTER = [50.4501, 30.5234]; // Kyiv Center (Khreshchatyk / Dnipro)
+        const KYIV_CENTER = [50.4501, 30.5234];
 
         let map;
-        let activeTargets = new Map();
-        let currentDraft = {
-            lat: 50.45,
-            lng: 30.52,
-            type: 'Шахед',
-            icon: '⚡',
-            angle: 270,
-            angleName: 'ЗАХІД'
-        };
+        let selectedHeading = 270; // За замовчуванням Захід
+        let pendingCoords = null;
+        let targets = new Map();
         let targetIdCounter = 1;
 
-        // Initialize Map
-        function initCleanMap() {
+        function initMap() {
             map = L.map('map', {
                 center: KYIV_CENTER,
                 zoom: 12,
                 minZoom: 11,
                 maxZoom: 16,
                 maxBounds: KYIV_BOUNDS,
-                maxBoundsViscosity: 1.0,     // Strictly cannot drag map outside Kyiv
-                zoomControl: false,          // No zoom UI buttons
-                attributionControl: false    // Clean screenshot, no leaflet footer
+                maxBoundsViscosity: 1.0,
+                zoomControl: false,
+                attributionControl: false
             });
 
-            // 100% Real, High-contrast, standard OpenStreetMap
+            // Справжній чистий OpenStreetMap без водяних знаків та затемнень
             L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                crossOrigin: true
+                maxZoom: 19
             }).addTo(map);
 
-            // Right-click on desktop drops target immediately
+            // Правий клік (ПК) або довгий тап (смартфон/планшет)
             map.on('contextmenu', function(e) {
-                openTargetCreator(e.latlng.lat, e.latlng.lng, e.containerPoint.x, e.containerPoint.y);
+                openPrompt(e.latlng.lat, e.latlng.lng);
             });
 
-            // Mobile: Long press detection
             let touchTimer;
             map.on('mousedown', function(e) {
-                if (e.originalEvent && (e.originalEvent.touches || e.originalEvent.pointerType === 'touch')) {
+                if (e.originalEvent.pointerType === 'touch' || e.originalEvent.touches) {
                     touchTimer = setTimeout(() => {
-                        openTargetCreator(e.latlng.lat, e.latlng.lng, e.containerPoint.x, e.containerPoint.y);
+                        openPrompt(e.latlng.lat, e.latlng.lng);
                     }, 500);
                 }
             });
             map.on('mouseup mousemove', function() {
                 if (touchTimer) clearTimeout(touchTimer);
             });
-
-            // Setup modal buttons
-            setupModalControls();
         }
 
-        // Setup Context Modal Event Handlers
-        function setupModalControls() {
-            // Type presets
-            document.querySelectorAll('#typeButtons .type-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('#typeButtons .type-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    currentDraft.type = btn.dataset.type;
-                    currentDraft.icon = btn.dataset.icon;
-                });
-            });
+        function openPrompt(lat, lng) {
+            pendingCoords = [lat, lng];
+            document.getElementById('quickPromptModal').classList.remove('hidden');
+        }
 
-            // Heading presets
-            document.querySelectorAll('#headingButtons .head-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('#headingButtons .head-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    currentDraft.angle = parseInt(btn.dataset.angle, 10);
-                    currentDraft.angleName = btn.dataset.name;
-                    document.getElementById('headingPreview').innerText = `${currentDraft.angleName} (${currentDraft.angle}°)`;
-                });
+        function closeModal() {
+            document.getElementById('quickPromptModal').classList.add('hidden');
+            pendingCoords = null;
+        }
+
+        function setHeading(deg) {
+            selectedHeading = deg;
+            document.querySelectorAll('.h-btn').forEach(btn => {
+                if (parseInt(btn.dataset.heading) === deg) {
+                    btn.classList.add('active', 'bg-red-600', 'border-red-500', 'text-white');
+                    btn.classList.remove('bg-slate-800', 'border-slate-700');
+                } else {
+                    btn.classList.remove('active', 'bg-red-600', 'border-red-500', 'text-white');
+                    btn.classList.add('bg-slate-800', 'border-slate-700');
+                }
             });
         }
 
-        function openTargetCreator(lat, lng, screenX, screenY) {
-            currentDraft.lat = lat;
-            currentDraft.lng = lng;
+        function confirmTarget() {
+            if (!pendingCoords) return;
+            const [lat, lng] = pendingCoords;
+            const id = 'TRG-' + (targetIdCounter++);
 
-            const modal = document.getElementById('threatCreatorModal');
-            document.getElementById('coordLabel').innerText = `[${lat.toFixed(3)}, ${lng.toFixed(3)}]`;
-
-            // Position popup intelligently inside viewport
-            const modalWidth = 290;
-            const modalHeight = 260;
-            const x = Math.min(Math.max(screenX, modalWidth / 2 + 10), window.innerWidth - modalWidth / 2 - 10);
-            const y = Math.min(Math.max(screenY, modalHeight / 2 + 10), window.innerHeight - modalHeight / 2 - 10);
-
-            modal.style.left = `${x}px`;
-            modal.style.top = `${y}px`;
-            modal.style.display = 'block';
-        }
-
-        function closeCreatorModal() {
-            document.getElementById('threatCreatorModal').style.display = 'none';
-        }
-
-        function confirmPlotTarget() {
-            const id = 'T' + targetIdCounter++;
-            const targetData = {
+            const targetObj = {
                 id: id,
-                lat: currentDraft.lat,
-                lng: currentDraft.lng,
-                type: currentDraft.type,
-                icon: currentDraft.icon,
-                heading: currentDraft.angle,
-                headingName: currentDraft.angleName,
+                lat: lat,
+                lng: lng,
+                heading: selectedHeading,
                 marker: null,
-                dangerSector: null,
-                vectorLine: null
+                vectorLine: null,
+                dangerSector: null
             };
 
-            renderTargetLayers(targetData);
-            activeTargets.set(id, targetData);
-
-            closeCreatorModal();
+            renderHostileTarget(targetObj);
+            targets.set(id, targetObj);
+            closeModal();
         }
 
-        function renderTargetLayers(target) {
-            // Tactical concentric military beacon icon without any text badges
-            const iconHtml = `
-                <div class="tactical-target-wrap">
-                    <div class="tactical-pulse-ring"></div>
-                    <div class="tactical-core-disc">
-                        <div class="tactical-core-dot"></div>
+        // Візуалізація цілі згідно з наданим зразком (без тексту)
+        function renderHostileTarget(target) {
+            const targetIcon = L.divIcon({
+                className: 'tactical-hostile-marker',
+                html: `
+                    <div class="relative flex items-center justify-center w-10 h-10 cursor-grab active:cursor-grabbing">
+                        <div class="absolute -inset-1 rounded-full bg-red-600/30 custom-ping"></div>
+                        <div class="w-7 h-7 bg-red-600 border-2 border-white rounded-full flex items-center justify-center shadow-xl">
+                            <span class="text-[11px] font-black text-white mono-font">!</span>
+                        </div>
                     </div>
-                </div>
-            `;
-
-            const customMarkerIcon = L.divIcon({
-                className: '',
-                html: iconHtml,
-                iconSize: [38, 38],
-                iconAnchor: [19, 19]
+                `,
+                iconSize: [40, 40],
+                iconAnchor: [20, 20]
             });
 
-            // Marker with drag-and-drop capability
             const marker = L.marker([target.lat, target.lng], {
-                icon: customMarkerIcon,
-                draggable: true
+                icon: targetIcon,
+                draggable: true,
+                autoPan: false
             }).addTo(map);
 
             target.marker = marker;
-            drawDangerCone(target);
+            updateThreatShapes(target);
 
-            // Drag to update position across districts in real time
+            // Перетягування (Drag-and-Drop) з автоматичним перерахунком курсу
             marker.on('drag', function(e) {
                 const newPos = e.target.getLatLng();
                 const prevPos = L.latLng(target.lat, target.lng);
                 
-                // Automatically re-compute heading based on drag direction
                 const dy = newPos.lat - prevPos.lat;
                 const dx = Math.cos(Math.PI / 180 * prevPos.lat) * (newPos.lng - prevPos.lng);
-                let deg = Math.atan2(dx, dy) * (180 / Math.PI);
-                if (deg < 0) deg += 360;
+                let angle = Math.atan2(dx, dy) * (180 / Math.PI);
+                if (angle < 0) angle += 360;
 
-                target.heading = Math.round(deg);
-                target.headingName = getHeadingText(deg);
+                target.heading = Math.round(angle);
                 target.lat = newPos.lat;
                 target.lng = newPos.lng;
-
-                drawDangerCone(target);
+                updateThreatShapes(target);
             });
 
-            // Click to open quick delete / complete actions
+            // Клік на маркер — видалення
             marker.on('click', function() {
-                openTargetActions(target);
-            });
-
-            // Double click to remove immediately
-            marker.on('dblclick', function(e) {
-                L.DomEvent.stopPropagation(e);
                 removeTarget(target.id);
             });
         }
 
-        function getHeadingText(deg) {
-            const dirs = ['ПІВНІЧ', 'ПН-СХІД', 'СХІД', 'ПД-СХІД', 'ПІВДЕНЬ', 'ПД-ЗАХІД', 'ЗАХІД', 'ПН-ЗАХІД'];
-            const idx = Math.round(deg / 45) % 8;
-            return dirs[idx];
-        }
-
-        // Draw translucent danger cone & line of projection (dead reckoning)
-        function drawDangerCone(target) {
+        // Геометрія сектора та пунктирного вектора з вашого коду
+        function updateThreatShapes(target) {
             if (target.vectorLine) map.removeLayer(target.vectorLine);
             if (target.dangerSector) map.removeLayer(target.dangerSector);
 
             const start = L.latLng(target.lat, target.lng);
-            const distKm = 4.2; // Projection distance across Kyiv sectors
+            const distKm = 3.5;
             const angleRad = (target.heading * Math.PI) / 180;
 
             const endLat = target.lat + (distKm / 111.32) * Math.cos(angleRad);
             const endLng = target.lng + (distKm / (111.32 * Math.cos(target.lat * (Math.PI / 180)))) * Math.sin(angleRad);
             const end = L.latLng(endLat, endLng);
 
-            // Vector center trajectory dashed line
+            // Пунктирний вектор руху
             target.vectorLine = L.polyline([start, end], {
-                color: '#dc2626',
-                weight: 3.5,
-                dashArray: '6, 6',
-                opacity: 0.95
+                color: '#ef4444',
+                weight: 2.5,
+                dashArray: '5, 8'
             }).addTo(map);
 
-            // Danger cone fan (spread)
-            const spreadRad = 22 * (Math.PI / 180);
-            const leftAngle = angleRad - spreadRad;
-            const rightAngle = angleRad + spreadRad;
+            // Сектор загрози 22°
+            const spread = 22 * (Math.PI / 180);
+            const leftAngle = angleRad - spread;
+            const rightAngle = angleRad + spread;
 
-            const leftLat = target.lat + ((distKm * 0.95) / 111.32) * Math.cos(leftAngle);
-            const leftLng = target.lng + ((distKm * 0.95) / (111.32 * Math.cos(target.lat * (Math.PI / 180)))) * Math.sin(leftAngle);
+            const leftLat = target.lat + ((distKm * 0.9) / 111.32) * Math.cos(leftAngle);
+            const leftLng = target.lng + ((distKm * 0.9) / (111.32 * Math.cos(target.lat * (Math.PI / 180)))) * Math.sin(leftAngle);
 
-            const rightLat = target.lat + ((distKm * 0.95) / 111.32) * Math.cos(rightAngle);
-            const rightLng = target.lng + ((distKm * 0.95) / (111.32 * Math.cos(target.lat * (Math.PI / 180)))) * Math.sin(rightAngle);
+            const rightLat = target.lat + ((distKm * 0.9) / 111.32) * Math.cos(rightAngle);
+            const rightLng = target.lng + ((distKm * 0.9) / (111.32 * Math.cos(target.lat * (Math.PI / 180)))) * Math.sin(rightAngle);
 
             target.dangerSector = L.polygon([
                 start,
@@ -570,67 +306,30 @@
                 end,
                 [rightLat, rightLng]
             ], {
-                color: '#ef4444',
-                weight: 2,
-                fillColor: '#dc2626',
-                fillOpacity: 0.28
+                color: '#dc2626',
+                weight: 1,
+                fillColor: '#ef4444',
+                fillOpacity: 0.18
             }).addTo(map);
         }
 
-        // Quick popup on target click: Збито / Локаційно втрачено
-        function openTargetActions(target) {
-            const content = document.createElement('div');
-            content.style.padding = '6px';
-            content.style.fontSize = '12px';
-            content.innerHTML = `
-                <div style="font-weight: 800; color: #f87171; margin-bottom: 6px; font-family: 'Oswald', sans-serif;">
-                    ${target.type.toUpperCase()} // ${target.headingName}
-                </div>
-                <div style="display: flex; gap: 6px;">
-                    <button id="btnKill-${target.id}" style="background: #16a34a; color: white; border: none; padding: 5px 8px; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 11px;">
-                        🎯 ЗБИТО
-                    </button>
-                    <button id="btnLost-${target.id}" style="background: #475569; color: white; border: none; padding: 5px 8px; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 11px;">
-                        ВТРАЧЕНО
-                    </button>
-                </div>
-            `;
-
-            target.marker.bindPopup(content, { offset: [0, -10] }).openPopup();
-
-            setTimeout(() => {
-                const btnKill = document.getElementById(`btnKill-${target.id}`);
-                const btnLost = document.getElementById(`btnLost-${target.id}`);
-                if (btnKill) btnKill.onclick = () => removeTarget(target.id);
-                if (btnLost) btnLost.onclick = () => removeTarget(target.id);
-            }, 50);
-        }
-
         function removeTarget(id) {
-            const target = activeTargets.get(id);
+            const target = targets.get(id);
             if (!target) return;
-
             if (target.marker) map.removeLayer(target.marker);
             if (target.vectorLine) map.removeLayer(target.vectorLine);
             if (target.dangerSector) map.removeLayer(target.dangerSector);
-
-            activeTargets.delete(id);
+            targets.delete(id);
         }
 
-        // Keyboard hotkeys for fast telegram admin workflow:
-        // 'C' cleans all targets from map
-        window.addEventListener('keydown', function(e) {
-            if (e.key === 'c' || e.key === 'C' || e.key === 'с' || e.key === 'С') {
-                activeTargets.forEach((t, id) => removeTarget(id));
-            }
-            if (e.key === 'Escape') {
-                closeCreatorModal();
+        // Швидке очищення всіх цілей клавішею "C" або "Delete"
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'c' || e.key === 'C' || e.key === 'Delete') {
+                targets.forEach((t) => removeTarget(t.id));
             }
         });
 
-        window.addEventListener('DOMContentLoaded', () => {
-            initCleanMap();
-        });
+        window.addEventListener('DOMContentLoaded', initMap);
     </script>
 </body>
 </html>
