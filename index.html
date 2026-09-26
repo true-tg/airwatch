@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Київський Движ // Повітряна обізнаність</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
     <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -29,7 +27,7 @@
             cursor: crosshair !important;
         }
 
-        /* Напівпрозорий чорний захисний водяний знак для скриншотів */
+        /* Напівпрозорий захисний водяний знак */
         .watermark-overlay {
             position: fixed;
             inset: -50%;
@@ -57,12 +55,6 @@
             text-shadow: 0 0 1px rgba(255, 255, 255, 0.4);
         }
 
-        /* Візуальні стилі маркера з наданого коду */
-        .tactical-hostile-marker {
-            background: transparent;
-            border: none;
-        }
-
         @keyframes threat-ping {
             0% { transform: scale(0.8); opacity: 0.8; }
             50% { transform: scale(1.6); opacity: 0.25; }
@@ -72,66 +64,106 @@
         .custom-ping {
             animation: threat-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
         }
+
+        .leaflet-div-icon {
+            background: transparent !important;
+            border: none !important;
+        }
+
+        /* Кільце обертання курсу */
+        .rotator-container {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            border: 2px dashed rgba(220, 38, 38, 0.85);
+            background: rgba(220, 38, 38, 0.08);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .rotator-handle {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 24px;
+            background: #dc2626;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            cursor: grab;
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+
+        .rotator-handle:active {
+            cursor: grabbing;
+            transform: translateX(-50%) scale(1.15);
+        }
+
+        .arrow-up {
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-bottom: 7px solid #ffffff;
+        }
+
+        /* Кнопка швидкого видалення */
+        .delete-btn-popup {
+            position: absolute;
+            top: -38px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 24px;
+            background: #111827;
+            border: 2px solid #ef4444;
+            border-radius: 50%;
+            color: #ef4444;
+            font-size: 13px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: all 0.15s ease;
+            z-index: 3000;
+            pointer-events: auto;
+        }
+
+        .delete-btn-popup:hover {
+            background: #ef4444;
+            color: #ffffff;
+            transform: translateX(-50%) scale(1.15);
+        }
     </style>
 </head>
 <body class="relative">
 
-    <!-- КАРТА КИЄВА БЕЗ ІНТЕРФЕЙСУ -->
+    <!-- КАРТА КИЄВА -->
     <div id="map"></div>
 
-    <!-- ЧОРНА ВОДЯНА МАРКА t.me/k_dvizh / Киевский Движ -->
-    <div class="watermark-overlay">
-        <div class="watermark-row">
-            <span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span>
-        </div>
-        <div class="watermark-row">
-            <span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span>
-        </div>
-        <div class="watermark-row">
-            <span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span>
-        </div>
-        <div class="watermark-row">
-            <span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span>
-        </div>
-        <div class="watermark-row">
-            <span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span>
-        </div>
-        <div class="watermark-row">
-            <span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span>
-        </div>
-        <div class="watermark-row">
-            <span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span>
-        </div>
-        <div class="watermark-row">
-            <span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span>
-        </div>
-    </div>
-
-    <!-- ШВИДКЕ КОНТЕКСТНЕ МЕНЮ ВСТАНОВЛЕННЯ КУРСУ (З'ЯВЛЯЄТЬСЯ ТІЛЬКИ ПРИ КЛІКУ) -->
-    <div id="quickPromptModal" class="hidden fixed z-[1000] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900/95 text-slate-100 border border-slate-700 p-4 rounded-xl shadow-2xl backdrop-blur-md w-72">
-        <div class="text-xs font-bold uppercase tracking-wider text-red-400 mb-2 pb-1 border-b border-slate-700 flex justify-between items-center">
-            <span>Напрямок руху цілі</span>
-            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-base leading-none">&times;</button>
-        </div>
-        
-        <div class="grid grid-cols-4 gap-1.5 mb-3 text-xs font-bold">
-            <button type="button" onclick="setHeading(0)" data-heading="0" class="h-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-center">Пн</button>
-            <button type="button" onclick="setHeading(45)" data-heading="45" class="h-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-center">Пн-Сх</button>
-            <button type="button" onclick="setHeading(90)" data-heading="90" class="h-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-center">Сх</button>
-            <button type="button" onclick="setHeading(135)" data-heading="135" class="h-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-center">Пд-Сх</button>
-            <button type="button" onclick="setHeading(180)" data-heading="180" class="h-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-center">Пд</button>
-            <button type="button" onclick="setHeading(225)" data-heading="225" class="h-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-center">Пд-Зх</button>
-            <button type="button" onclick="setHeading(270)" data-heading="270" class="h-btn active py-1.5 bg-red-600 border border-red-500 rounded text-center text-white">Зх</button>
-            <button type="button" onclick="setHeading(315)" data-heading="315" class="h-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-center">Пн-Зх</button>
-        </div>
-
-        <button onclick="confirmTarget()" class="w-full py-2 bg-red-600 hover:bg-red-500 text-white rounded font-bold text-xs uppercase tracking-wide transition shadow-lg shadow-red-700/40">
-            Нанести загрозу
-        </button>
+    <!-- ВОДЯНИЙ ЗНАК КИЇВСЬКИЙ ДВИЖ -->
+    <div class="watermark-overlay" id="watermark">
+        <div class="watermark-row"><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span></div>
+        <div class="watermark-row"><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span></div>
+        <div class="watermark-row"><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span></div>
+        <div class="watermark-row"><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span></div>
+        <div class="watermark-row"><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span></div>
+        <div class="watermark-row"><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span></div>
+        <div class="watermark-row"><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span></div>
+        <div class="watermark-row"><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span><span>Киевский Движ</span></div>
     </div>
 
     <script>
-        // Межі Києва (карта зафіксована)
         const KYIV_BOUNDS = [
             [50.3150, 30.2300],
             [50.5850, 30.8200]
@@ -139,8 +171,6 @@
         const KYIV_CENTER = [50.4501, 30.5234];
 
         let map;
-        let selectedHeading = 270; // За замовчуванням Захід
-        let pendingCoords = null;
         let targets = new Map();
         let targetIdCounter = 1;
 
@@ -156,140 +186,240 @@
                 attributionControl: false
             });
 
-            // Справжній чистий OpenStreetMap без водяних знаків та затемнень
             L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19
             }).addTo(map);
 
-            // Правий клік (ПК) або довгий тап (смартфон/планшет)
+            // Клік правою кнопкою (ПК) або довгий тап (смартфон) для нанесення цілі
             map.on('contextmenu', function(e) {
-                openPrompt(e.latlng.lat, e.latlng.lng);
+                spawnTarget(e.latlng.lat, e.latlng.lng);
             });
 
             let touchTimer;
             map.on('mousedown', function(e) {
                 if (e.originalEvent.pointerType === 'touch' || e.originalEvent.touches) {
                     touchTimer = setTimeout(() => {
-                        openPrompt(e.latlng.lat, e.latlng.lng);
-                    }, 500);
+                        spawnTarget(e.latlng.lat, e.latlng.lng);
+                    }, 450);
                 }
             });
+
             map.on('mouseup mousemove', function() {
                 if (touchTimer) clearTimeout(touchTimer);
             });
-        }
 
-        function openPrompt(lat, lng) {
-            pendingCoords = [lat, lng];
-            document.getElementById('quickPromptModal').classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('quickPromptModal').classList.add('hidden');
-            pendingCoords = null;
-        }
-
-        function setHeading(deg) {
-            selectedHeading = deg;
-            document.querySelectorAll('.h-btn').forEach(btn => {
-                if (parseInt(btn.dataset.heading) === deg) {
-                    btn.classList.add('active', 'bg-red-600', 'border-red-500', 'text-white');
-                    btn.classList.remove('bg-slate-800', 'border-slate-700');
-                } else {
-                    btn.classList.remove('active', 'bg-red-600', 'border-red-500', 'text-white');
-                    btn.classList.add('bg-slate-800', 'border-slate-700');
-                }
+            // Клік по вільній карті приховує елементи редагування
+            map.on('click', function() {
+                hideAllControls();
             });
         }
 
-        function confirmTarget() {
-            if (!pendingCoords) return;
-            const [lat, lng] = pendingCoords;
+        function hideAllControls() {
+            targets.forEach(t => {
+                if (t.rotatorMarker) {
+                    map.removeLayer(t.rotatorMarker);
+                    t.rotatorMarker = null;
+                }
+                const delBtn = document.getElementById(`del-${t.id}`);
+                if (delBtn) delBtn.style.display = 'none';
+            });
+        }
+
+        function spawnTarget(lat, lng) {
+            hideAllControls();
             const id = 'TRG-' + (targetIdCounter++);
+            const initialHeading = 270; // За замовчуванням Захід
 
             const targetObj = {
                 id: id,
                 lat: lat,
                 lng: lng,
-                heading: selectedHeading,
-                marker: null,
+                heading: initialHeading,
+                centerMarker: null,
+                rotatorMarker: null,
                 vectorLine: null,
                 dangerSector: null
             };
 
-            renderHostileTarget(targetObj);
+            renderTarget(targetObj);
             targets.set(id, targetObj);
-            closeModal();
         }
 
-        // Візуалізація цілі згідно з наданим зразком (без тексту)
-        function renderHostileTarget(target) {
-            const targetIcon = L.divIcon({
-                className: 'tactical-hostile-marker',
+        function renderTarget(target) {
+            const centerIcon = L.divIcon({
+                className: 'target-marker-clean',
                 html: `
-                    <div class="relative flex items-center justify-center w-10 h-10 cursor-grab active:cursor-grabbing">
-                        <div class="absolute -inset-1 rounded-full bg-red-600/30 custom-ping"></div>
-                        <div class="w-7 h-7 bg-red-600 border-2 border-white rounded-full flex items-center justify-center shadow-xl">
-                            <span class="text-[11px] font-black text-white mono-font">!</span>
+                    <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+                        <div id="del-${target.id}" class="delete-btn-popup" style="display: none;" title="Видалити ціль">
+                            ✕
+                        </div>
+                        <div class="custom-ping" style="position: absolute; inset: -4px; border-radius: 50%; background: rgba(239, 68, 68, 0.35); pointer-events: none;"></div>
+                        <div style="width: 28px; height: 28px; background: #dc2626; border: 2.5px solid #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.4); cursor: grab;">
+                            <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 900; color: #ffffff;">!</span>
                         </div>
                     </div>
                 `,
-                iconSize: [40, 40],
-                iconAnchor: [20, 20]
+                iconSize: [36, 36],
+                iconAnchor: [18, 18]
             });
 
-            const marker = L.marker([target.lat, target.lng], {
-                icon: targetIcon,
+            const centerMarker = L.marker([target.lat, target.lng], {
+                icon: centerIcon,
                 draggable: true,
-                autoPan: false
+                autoPan: false,
+                zIndexOffset: 2000
             }).addTo(map);
 
-            target.marker = marker;
+            target.centerMarker = centerMarker;
             updateThreatShapes(target);
 
-            // Перетягування (Drag-and-Drop) з автоматичним перерахунком курсу
-            marker.on('drag', function(e) {
-                const newPos = e.target.getLatLng();
-                const prevPos = L.latLng(target.lat, target.lng);
-                
-                const dy = newPos.lat - prevPos.lat;
-                const dx = Math.cos(Math.PI / 180 * prevPos.lat) * (newPos.lng - prevPos.lng);
-                let angle = Math.atan2(dx, dy) * (180 / Math.PI);
-                if (angle < 0) angle += 360;
+            // Кнопка видалення
+            setTimeout(() => {
+                const delBtn = document.getElementById(`del-${target.id}`);
+                if (delBtn) {
+                    delBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        removeTarget(target.id);
+                    });
+                }
+            }, 30);
 
-                target.heading = Math.round(angle);
-                target.lat = newPos.lat;
-                target.lng = newPos.lng;
+            // Синхронне переміщення (Drag-and-Drop) без зміщення секторів
+            centerMarker.on('drag', function(e) {
+                const pos = e.target.getLatLng();
+                target.lat = pos.lat;
+                target.lng = pos.lng;
+
+                if (target.rotatorMarker) {
+                    target.rotatorMarker.setLatLng(pos);
+                }
+
                 updateThreatShapes(target);
             });
 
-            // Клік на маркер — видалення
-            marker.on('click', function() {
-                removeTarget(target.id);
+            centerMarker.on('dragend', function(e) {
+                const pos = e.target.getLatLng();
+                target.lat = pos.lat;
+                target.lng = pos.lng;
+                updateThreatShapes(target);
+            });
+
+            // Клік: відкрити/закрити поворотне кільце та хрестик
+            centerMarker.on('click', function(e) {
+                L.DomEvent.stopPropagation(e);
+                const delBtn = document.getElementById(`del-${target.id}`);
+                const isCurrentlyOpen = (delBtn && delBtn.style.display === 'flex');
+
+                hideAllControls();
+
+                if (!isCurrentlyOpen) {
+                    if (delBtn) delBtn.style.display = 'flex';
+                    showRotator(target);
+                }
             });
         }
 
-        // Геометрія сектора та пунктирного вектора з вашого коду
+        // Відображення кільця повороту курсу
+        function showRotator(target) {
+            const rotatorIcon = L.divIcon({
+                className: 'rotator-layer',
+                html: `
+                    <div id="rot-ring-${target.id}" class="rotator-container" style="transform: rotate(${target.heading}deg);">
+                        <div class="rotator-handle" id="rot-handle-${target.id}">
+                            <div class="arrow-up"></div>
+                        </div>
+                    </div>
+                `,
+                iconSize: [130, 130],
+                iconAnchor: [65, 65]
+            });
+
+            target.rotatorMarker = L.marker([target.lat, target.lng], {
+                icon: rotatorIcon,
+                zIndexOffset: 1500,
+                interactive: false
+            }).addTo(map);
+
+            setTimeout(() => {
+                const handle = document.getElementById(`rot-handle-${target.id}`);
+                const ring = document.getElementById(`rot-ring-${target.id}`);
+                if (!handle || !ring) return;
+
+                let isRotating = false;
+
+                function rotateMove(clientX, clientY) {
+                    const rect = ring.getBoundingClientRect();
+                    const cx = rect.left + rect.width / 2;
+                    const cy = rect.top + rect.height / 2;
+
+                    const dx = clientX - cx;
+                    const dy = clientY - cy;
+
+                    let angle = Math.atan2(dx, -dy) * (180 / Math.PI);
+                    if (angle < 0) angle += 360;
+
+                    target.heading = Math.round(angle);
+                    ring.style.transform = `rotate(${target.heading}deg)`;
+                    updateThreatShapes(target);
+                }
+
+                handle.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                    isRotating = true;
+                    map.dragging.disable();
+                });
+
+                window.addEventListener('mousemove', (e) => {
+                    if (isRotating) rotateMove(e.clientX, e.clientY);
+                });
+
+                window.addEventListener('mouseup', () => {
+                    if (isRotating) {
+                        isRotating = false;
+                        map.dragging.enable();
+                    }
+                });
+
+                handle.addEventListener('touchstart', (e) => {
+                    e.stopPropagation();
+                    isRotating = true;
+                    map.dragging.disable();
+                }, { passive: false });
+
+                window.addEventListener('touchmove', (e) => {
+                    if (isRotating && e.touches.length > 0) {
+                        rotateMove(e.touches[0].clientX, e.touches[0].clientY);
+                    }
+                }, { passive: false });
+
+                window.addEventListener('touchend', () => {
+                    if (isRotating) {
+                        isRotating = false;
+                        map.dragging.enable();
+                    }
+                });
+            }, 30);
+        }
+
+        // Побудова конуса небезпеки та пунктирного вектора[cite: 1]
         function updateThreatShapes(target) {
             if (target.vectorLine) map.removeLayer(target.vectorLine);
             if (target.dangerSector) map.removeLayer(target.dangerSector);
 
             const start = L.latLng(target.lat, target.lng);
-            const distKm = 3.5;
+            const distKm = 4.2; // Довжина сектора для масштабу Києва
             const angleRad = (target.heading * Math.PI) / 180;
 
             const endLat = target.lat + (distKm / 111.32) * Math.cos(angleRad);
             const endLng = target.lng + (distKm / (111.32 * Math.cos(target.lat * (Math.PI / 180)))) * Math.sin(angleRad);
             const end = L.latLng(endLat, endLng);
 
-            // Пунктирний вектор руху
             target.vectorLine = L.polyline([start, end], {
                 color: '#ef4444',
                 weight: 2.5,
                 dashArray: '5, 8'
             }).addTo(map);
 
-            // Сектор загрози 22°
             const spread = 22 * (Math.PI / 180);
             const leftAngle = angleRad - spread;
             const rightAngle = angleRad + spread;
@@ -316,7 +446,8 @@
         function removeTarget(id) {
             const target = targets.get(id);
             if (!target) return;
-            if (target.marker) map.removeLayer(target.marker);
+            if (target.centerMarker) map.removeLayer(target.centerMarker);
+            if (target.rotatorMarker) map.removeLayer(target.rotatorMarker);
             if (target.vectorLine) map.removeLayer(target.vectorLine);
             if (target.dangerSector) map.removeLayer(target.dangerSector);
             targets.delete(id);
