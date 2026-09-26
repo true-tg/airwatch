@@ -9,6 +9,8 @@
     <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Бібліотека для знімків DOM -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas-pro@1.5.8/dist/html2canvas-pro.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@700;800;900&family=JetBrains+Mono:wght@700&display=swap');
 
@@ -57,7 +59,7 @@
             text-shadow: 0 0 1px rgba(255, 255, 255, 0.4);
         }
 
-        /* Візуальні стилі маркера з наданого коду */
+        /* Візуальні стилі маркера */
         .tactical-hostile-marker {
             background: transparent;
             border: none;
@@ -76,10 +78,19 @@
 </head>
 <body class="relative">
 
-    <!-- КАРТА КИЄВА БЕЗ ІНТЕРФЕЙСУ -->
+    <!-- КАРТА КИЄВА -->
     <div id="map"></div>
 
-    <!-- ЧОРНА ВОДЯНА МАРКА t.me/k_dvizh / Киевский Движ -->
+    <!-- КНОПКА СКРИНШОТУ В ПРАВОМУ ВЕРХНЬОМУ КУТКУ -->
+    <button id="screenshotBtn" onclick="takeScreenshot()" class="fixed top-4 right-4 z-[1001] flex items-center gap-2 bg-slate-900/90 hover:bg-slate-800 text-slate-100 border border-slate-700/80 px-3.5 py-2 rounded-xl shadow-2xl backdrop-blur-md transition-all active:scale-95 text-xs font-bold tracking-wide">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        <span>Зробити скриншот</span>
+    </button>
+
+    <!-- ЧОРНА ВОДЯНА МАРКА -->
     <div class="watermark-overlay">
         <div class="watermark-row">
             <span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span><span>t.me/k_dvizh</span>
@@ -107,7 +118,7 @@
         </div>
     </div>
 
-    <!-- ШВИДКЕ КОНТЕКСТНЕ МЕНЮ ВСТАНОВЛЕННЯ КУРСУ (З'ЯВЛЯЄТЬСЯ ТІЛЬКИ ПРИ КЛІКУ) -->
+    <!-- ШВИДКЕ КОНТЕКСТНЕ МЕНЮ ВСТАНОВЛЕННЯ КУРСУ -->
     <div id="quickPromptModal" class="hidden fixed z-[1000] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900/95 text-slate-100 border border-slate-700 p-4 rounded-xl shadow-2xl backdrop-blur-md w-72">
         <div class="text-xs font-bold uppercase tracking-wider text-red-400 mb-2 pb-1 border-b border-slate-700 flex justify-between items-center">
             <span>Напрямок руху цілі</span>
@@ -131,7 +142,6 @@
     </div>
 
     <script>
-        // Межі Києва (карта зафіксована)
         const KYIV_BOUNDS = [
             [50.3150, 30.2300],
             [50.5850, 30.8200]
@@ -139,7 +149,7 @@
         const KYIV_CENTER = [50.4501, 30.5234];
 
         let map;
-        let selectedHeading = 270; // За замовчуванням Захід
+        let selectedHeading = 270;
         let pendingCoords = null;
         let targets = new Map();
         let targetIdCounter = 1;
@@ -156,12 +166,11 @@
                 attributionControl: false
             });
 
-            // Справжній чистий OpenStreetMap без водяних знаків та затемнень
             L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19
+                maxZoom: 19,
+                crossOrigin: true
             }).addTo(map);
 
-            // Правий клік (ПК) або довгий тап (смартфон/планшет)
             map.on('contextmenu', function(e) {
                 openPrompt(e.latlng.lat, e.latlng.lng);
             });
@@ -222,7 +231,6 @@
             closeModal();
         }
 
-        // Візуалізація цілі згідно з наданим зразком (без тексту)
         function renderHostileTarget(target) {
             const targetIcon = L.divIcon({
                 className: 'tactical-hostile-marker',
@@ -247,7 +255,6 @@
             target.marker = marker;
             updateThreatShapes(target);
 
-            // Перетягування (Drag-and-Drop) з автоматичним перерахунком курсу
             marker.on('drag', function(e) {
                 const newPos = e.target.getLatLng();
                 const prevPos = L.latLng(target.lat, target.lng);
@@ -263,13 +270,11 @@
                 updateThreatShapes(target);
             });
 
-            // Клік на маркер — видалення
             marker.on('click', function() {
                 removeTarget(target.id);
             });
         }
 
-        // Геометрія сектора та пунктирного вектора з вашого коду
         function updateThreatShapes(target) {
             if (target.vectorLine) map.removeLayer(target.vectorLine);
             if (target.dangerSector) map.removeLayer(target.dangerSector);
@@ -282,14 +287,12 @@
             const endLng = target.lng + (distKm / (111.32 * Math.cos(target.lat * (Math.PI / 180)))) * Math.sin(angleRad);
             const end = L.latLng(endLat, endLng);
 
-            // Пунктирний вектор руху
             target.vectorLine = L.polyline([start, end], {
                 color: '#ef4444',
                 weight: 2.5,
                 dashArray: '5, 8'
             }).addTo(map);
 
-            // Сектор загрози 22°
             const spread = 22 * (Math.PI / 180);
             const leftAngle = angleRad - spread;
             const rightAngle = angleRad + spread;
@@ -322,7 +325,69 @@
             targets.delete(id);
         }
 
-        // Швидке очищення всіх цілей клавішею "C" або "Delete"
+        // Логіка створення та збереження 16:9 скриншоту
+        async function takeScreenshot() {
+            const btn = document.getElementById('screenshotBtn');
+            const modal = document.getElementById('quickPromptModal');
+            
+            // Тимчасово приховуємо кнопку та модальне вікно вибору курсу
+            btn.style.display = 'none';
+            const wasModalVisible = !modal.classList.contains('hidden');
+            if (wasModalVisible) modal.classList.add('hidden');
+
+            try {
+                const fullCanvas = await html2canvas(document.body, {
+                    useCORS: true,
+                    allowTaint: false,
+                    scale: window.devicePixelRatio || 2,
+                    backgroundColor: null
+                });
+
+                // Обчислюємо розміри центрального кадру зі співвідношенням 16:9
+                const srcW = fullCanvas.width;
+                const srcH = fullCanvas.height;
+                const targetRatio = 16 / 9;
+
+                let cropW = srcW;
+                let cropH = srcW / targetRatio;
+
+                if (cropH > srcH) {
+                    cropH = srcH;
+                    cropW = srcH * targetRatio;
+                }
+
+                const cropX = (srcW - cropW) / 2;
+                const cropY = (srcH - cropH) / 2;
+
+                const cropCanvas = document.createElement('canvas');
+                cropCanvas.width = Math.round(cropW);
+                cropCanvas.height = Math.round(cropH);
+
+                const ctx = cropCanvas.getContext('2d');
+                ctx.drawImage(
+                    fullCanvas,
+                    cropX, cropY, cropW, cropH,
+                    0, 0, cropCanvas.width, cropCanvas.height
+                );
+
+                // Автоматичне завантаження знімка
+                const link = document.createElement('a');
+                const now = new Date();
+                const pad = (n) => String(n).padStart(2, '0');
+                const timestamp = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+                link.download = `k_dvizh_map_${timestamp}.png`;
+                link.href = cropCanvas.toDataURL('image/png');
+                link.click();
+            } catch (err) {
+                console.error('Помилка формування скриншоту:', err);
+                alert('Не вдалося зберегти скриншот: перевірте підключення або CORS тайлів.');
+            } finally {
+                // Повертаємо елементи назад
+                btn.style.display = '';
+                if (wasModalVisible) modal.classList.remove('hidden');
+            }
+        }
+
         window.addEventListener('keydown', (e) => {
             if (e.key === 'c' || e.key === 'C' || e.key === 'Delete') {
                 targets.forEach((t) => removeTarget(t.id));
